@@ -9,11 +9,11 @@
 <body class="app">
   <section class="app__window">
     <header class="app__window__masthead">
-      <div class="masthead__title">RWD Window</div>
+      <div class="app__masthead-ident">
+        RWD Window
+        <!-- TODO: App logo, SVG code here -->
+      </div>
       <div class="masthead__controls">
-        <div class="app__ident">
-          <!-- TODO: App logo, SVG code here -->
-        </div>
         <fieldset class="app__actions">
           <button class="app__viewport-toggle" data-mode="Mobile portrait" data-min-width="320" data-max-width="477">
             <!-- TODO: replace with SVG icon: mobile portrait -->
@@ -44,22 +44,23 @@
         </fieldset>
         <fieldset class="app__file-loader">
           <label for="file-loader" class="app__control">
-            <span class="app__control-label">Load Local Demo</span>
-            <select id="file-loader" class="app__control-input">
-              <option value="" disabled selected>Select a demo</option>
-              <!-- TODO: Options will be populated by JavaScript -->
-            </select>
+            <span class="app__control-label loader">Load Local Demo</span>
+            <div class="app-control-select-wrap">
+              <select id="file-loader" class="app__control-input">
+                <option value="" disabled selected>Select a demo</option>
+                <!-- TODO: Options will be populated by JavaScript -->
+              </select>
+            </div>
           </label>
         </fieldset>
       </div>
     </header>
     <main class="app__window__view">
       <div class="viewport">
-        <div class="viewport__rs-top"></div>
-        <div class="viewport__rs-bottom"></div>
-        <div class="viewport__rs-left"></div>
-        <div class="viewport__rs-right"></div>
         <iframe src="./public/demo-01/index.html" frameborder="0" class="viewport__frame"></iframe>
+        <div class="viewport__rs bottom"></div>
+        <div class="viewport__rs left"></div>
+        <div class="viewport__rs right"></div>
       </div>
     </main>
   </section>
