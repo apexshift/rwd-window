@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- file loading via select field
 - Initial UI has been styled complete with focus, hover and webkit updates for consistancy.
 - Created initial skeleton structure for the app and it's initial features.
 
