@@ -1,4 +1,5 @@
 import { populateFilesSelect, initIFrameSrc } from './js/file-loader.js';
+import IFrameResizeController from './js/iFrameResizeController.js';
 
 const DEV_MODE = false;
 
@@ -24,15 +25,17 @@ const FONTS_READY = (fn = () => {}) => {
  */
 const INIT = () => {
   if(DEV_MODE) console.info('App initialized');
-  // TODO: Viewport Buttons must toggle iframe width to pre-defined widths.
-  // TODO: Width control must set the witdth of the iframe to the value of the input, input must be clamped to a min and max value.
-  // TODO: Height control must set the height of the iframe to the value of the input, input must be clamped to a min and max value.
-  // TODO: File loader must populate the file loader list with the files from the file-loader.json config file, clicking on a file in the list must load the file in the iframe.
+
   populateFilesSelect();
   initIFrameSrc();
+
+  // TODO: Viewport Buttons must toggle iframe width to pre-defined widths.
+  const resizeController = new IFrameResizeController();
+  console.log(resizeController.toString());
+  // TODO: Width control must set the witdth of the iframe to the value of the input, input must be clamped to a min and max value.
+  // TODO: Height control must set the height of the iframe to the value of the input, input must be clamped to a min and max value.
   // TODO: iframe has custom resize handles, if left or right is dragged, resize width from the center, if bottom is dragged, resize height from the bottom only.
   // TODO: double clicking any resize handle resets the iframe to the default (max) width and (maxh) height.
-
 }
 
 window.addEventListener('load', WINDOW_LOADED);
