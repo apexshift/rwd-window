@@ -1,14 +1,71 @@
 :root {
+  --theme-black: #000000;
+  --theme-dark: #161616;
+  --theme-slate: #252525;
+  --theme-grey: #7f7f7f;
+  --theme-concrete: #e2e3e5;
+  --theme-light: #f2f3f5;
+  --theme-white: #ffffff;
+  --theme-highlight: #8ce1d6;
 
+  --clamp-base: clamp(1.7rem, 1.64996rem + 0.139vi, 1.9rem);
+
+  --head-d3: clamp(5.076rem, 3.68028rem + 3.877vi, 10.659rem);
+  --head-d2: clamp(4.23rem, 3.28824rem + 2.616vi, 7.997rem);
+  --head-d1: clamp(3.525rem, 2.90652rem + 1.718vi, 5.999rem);
+  --head-1: clamp(2.938rem, 2.5474rem + 1.085vi, 4.5rem);
+  --head-2: clamp(2.448rem, 2.21616rem + 0.644vi, 3.376rem);
+  --head-3: clamp(2.04rem, 1.91688rem + 0.342vi, 2.5327rem);
+  --head-4: var(--clamp-base);
+  --text-xl: clamp(2.152rem, 1.94788rem + 0.567vi, 2.969rem);
+  --text-lg: clamp(1.9125rem, 1.79694rem + 0.321vi, 2.375rem);
+  --text-md: var(--clamp-base);
+  --text-sm: clamp(1.511rem, 1.50884rem + 0.006vi, 1.52rem);
+  --text-xs: clamp(1.343rem, 1.37468rem + -0.088vi, 1.216rem);
+  --line-height-heading: clamp(1.05, 1.0248 + 0.007vi, 1.15);
+  --line-height-tight: clamp(1.1, 1.0748 + 0.007vi, 1.2);
+  --line-height-snug: clamp(1.25, 1.2248 + 0.007vi, 1.35);
+  --line-height-normal: clamp(1.45, 1.414 + 0.01vi, 1.6);
+  --line-height-relaxed: clamp(1.6, 1.564 + 0.01vi, 1.75);
+
+  --space-4: clamp(0.4rem, 0.4rem + 0vi, 0.4rem);
+  --space-8: clamp(0.8rem, 0.8rem + 0vi, 0.8rem);
+  --space-12: clamp(1.2rem, 1.2rem + 0vi, 1.2rem);
+  --space-16: clamp(1.6rem, 1.6rem + 0vi, 1.6rem);
+  --space-24: clamp(2.4rem, 2.4rem + 0vi, 2.4rem);
+  --space-32: clamp(3.2rem, 3.2rem + 0vi, 3.2rem);
+  --space-48: clamp(4.8rem, 4.8rem + 0vi, 4.8rem);
+  --space-64: clamp(6.4rem, 6.4rem + 0vi, 6.4rem);
+  --space-72: clamp(7.2rem, 7.2rem + 0vi, 7.2rem);
+  --space-96: clamp(9.6rem, 9.6rem + 0vi, 9.6rem);
+
+  --speed-fastest: 150ms;
+  --speed-faster: 250ms;
+  --speed-fast: 350ms;
+  --speed-medium: 500ms;
+  --speed-slow: 750ms;
+  --speed-slower: 1000ms;
+  --speed-slowest: 1200ms;
+
+  --ease-hop: cubic-bezier(.87, 0, .13, 1);
+  --ease-hard-hop: cubic-bezier(1, 0, 0, 1);
 }
 
 body {
   font-size: 1.7rem;
   line-height: 1.5;
   letter-spacing: -1%;
+
+  background-color: var(--theme-dark);
+  color: var(--theme-light);
 }
 
 h1, h2, h3, h4, h5, h6 {
   line-height: 1.1;
   letter-spacing: -3%;
+}
+
+fieldset {
+  background-color: var(--theme-slate);
+  border-radius: var(--space-4);
 }

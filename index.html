@@ -6,9 +6,64 @@
   <title>RWD Window</title>
   <link rel="stylesheet" href="./assets/app.css">
 </head>
-<body>
-  <h1>Nothing to see here yet.</h1>
-  <p>This is just the initial boilerplate which will be replaced with actual content.</p>
-   <script type="module" src="./assets/app.js"></script>
+<body class="app">
+  <section class="app__window">
+    <header class="app__window__masthead">
+      <div class="app__masthead-ident">
+        RWD Window
+        <!-- TODO: App logo, SVG code here -->
+      </div>
+      <div class="masthead__controls">
+        <fieldset class="app__actions">
+          <button class="app__viewport-toggle" data-mode="Mobile portrait" data-min-width="320" data-max-width="477">
+            <!-- TODO: replace with SVG icon: mobile portrait -->
+            P
+          </button>
+          <button class="app__viewport-toggle" data-mode="Mobile landscape" data-min-width="478" data-max-width="767">
+            <!-- TODO: replace with SVG icon: mobile landscape -->
+            L
+          </button>
+          <button class="app__viewport-toggle" data-mode="Tablet portrait" data-min-width="768" data-max-width="991">
+            <!-- TODO: replace with SVG icon: tablet portrait -->
+            T
+          </button>
+          <button class="app__viewport-toggle" data-mode="Desktop" data-min-width="992" data-max-width="1920">
+            <!-- TODO: replace with SVG icon: desktop -->
+            D
+          </button>
+        </fieldset>
+        <fieldset class="app__dimensions">
+          <label for="width-control" class="app__control">
+            <span class="app__control-label">W</span>
+            <input type="number" id="width-control" class="app__control-input" min="320" max="1920" value="1920" placeholder="-">
+          </label>
+          <label for="height-control" class="app__control">
+            <span class="app__control-label">H</span>
+            <input type="number" id="height-control" class="app__control-input" min="640" max="1080" value="1080" placeholder="-">
+          </label>
+        </fieldset>
+        <fieldset class="app__file-loader">
+          <label for="file-loader" class="app__control">
+            <span class="app__control-label loader">Load Local Demo</span>
+            <div class="app-control-select-wrap">
+              <select id="file-loader" class="app__control-input">
+                <option value="" disabled selected>Select a demo</option>
+                <!-- TODO: Options will be populated by JavaScript -->
+              </select>
+            </div>
+          </label>
+        </fieldset>
+      </div>
+    </header>
+    <main class="app__window__view">
+      <div class="viewport">
+        <iframe src="./public/demo-01/index.html" frameborder="0" class="viewport__frame"></iframe>
+        <div class="viewport__rs bottom"></div>
+        <div class="viewport__rs left"></div>
+        <div class="viewport__rs right"></div>
+      </div>
+    </main>
+  </section>
+  <script type="module" src="./assets/app.js"></script>
 </body>
 </html>
