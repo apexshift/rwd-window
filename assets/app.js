@@ -1,4 +1,4 @@
-const DEV_MODE = true;
+const DEV_MODE = false;
 
 const DOM_LOADED = (fn = () => {}) => {
   if(DEV_MODE) console.info('DOM loaded');
