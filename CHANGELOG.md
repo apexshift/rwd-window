@@ -17,14 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Feature X
-
-### Changed
-
-- Feature that has changed.
-
-### Removed
-
-- Feature that was removed from **0.3.0**
+- Created initial skeleton structure for the app and it's initial features.
 
 ## [[0.0.1-beta](https://github.com/user/repo/version)] - YYYY-MM-DD
