@@ -14,53 +14,104 @@
         <!-- TODO: App logo, SVG code here -->
       </div>
       <div class="masthead__controls">
-        <fieldset class="app__actions">
-          <button class="app__viewport-toggle" data-mode="Mobile portrait" data-min-width="320" data-max-width="477">
-            <!-- TODO: replace with SVG icon: mobile portrait -->
-            P
-          </button>
-          <button class="app__viewport-toggle" data-mode="Mobile landscape" data-min-width="478" data-max-width="767">
-            <!-- TODO: replace with SVG icon: mobile landscape -->
-            L
-          </button>
-          <button class="app__viewport-toggle" data-mode="Tablet portrait" data-min-width="768" data-max-width="991">
-            <!-- TODO: replace with SVG icon: tablet portrait -->
-            T
-          </button>
-          <button class="app__viewport-toggle" data-mode="Desktop" data-min-width="992" data-max-width="1920">
-            <!-- TODO: replace with SVG icon: desktop -->
-            D
+        <!-- fit to container mode -->
+        <fieldset class="controls-group">
+          <!-- fit to container control -->
+          <button class="ui-button active" title="Fit to container" data-mode="fit">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22 6V2H18" stroke="currentColor" stroke-miterlimit="10"></path>
+              <path d="M2 18V22H6" stroke="currentColor" stroke-miterlimit="10"></path>
+              <path d="M18 22H22V18" stroke="currentColor" stroke-miterlimit="10"></path>
+              <path d="M6 2H2V6" stroke="currentColor" stroke-miterlimit="10"></path>
+            </svg>
           </button>
         </fieldset>
-        <fieldset class="app__dimensions">
+        <!-- device mode  -->
+        <fieldset class="controls-group">
+          <!-- mobile portrait -->
+          <button class="ui-button" data-mode="Mobile portrait" data-min-width="320" data-max-width="477" title="Mobile portrait">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+              <g id="phone-mobile-phone--android-phone-mobile-device-smartphone-iphone">
+                <path id="Vector" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M10.5.5h-7a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1v-11a1 1 0 0 0-1-1" stroke-width="1"></path>
+                <path id="Vector_2" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M6.5 11h1" stroke-width="1"></path>
+              </g>
+            </svg>
+          </button>
+          <!-- mobile landscape -->
+          <button class="ui-button" data-mode="Mobile landscape" data-min-width="478" data-max-width="767" title="Mobile landscape">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+              <g id="phone-landscape--android-phone-mobile-device-smartphone-iphone-landscape">
+                <path id="Vector" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5v-7a1 1 0 0 0-1-1h-11a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1" stroke-width="1"></path>
+                <path id="Vector_2" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M3 6.5v1" stroke-width="1"></path>
+              </g>
+            </svg>
+          </button>
+          <!-- tablet portrait -->
+          <button class="ui-button" data-mode="Tablet portrait" data-min-width="768" data-max-width="991" title="Tablet portrait">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+              <g id="one-handed-holding-tablet-handheld">
+                <path id="Rectangle 2038" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M9.646 1.237A1 1 0 0 0 9 1H2a1 1 0 0 0-1 1v9.094a1 1 0 0 0 1 1h3.75" stroke-width="1"></path>
+                <path id="vector 296" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="m12.31 13 .639-3.152a2.6 2.6 0 0 0-.02-1.11l-.909-3.79a2 2 0 0 0-1.395-1.457l-.622-.178V8.55a.5.5 0 0 1-.688.464l-1.699-.682a.894.894 0 0 0-.998 1.432l1.243 1.367L8.9 13" stroke-width="1"></path>
+              </g>
+            </svg>
+          </button>
+          <!-- desktop landscape -->
+          <button class="ui-button active" data-mode="Desktop" data-min-width="992" data-max-width="1920">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+              <g id="laptop--device-laptop-electronics-computer-notebook">
+                <path id="Vector" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M3.08 1.61h7.834a.98.98 0 0 1 .98.98v5.39H2.1V2.59c0-.588.392-.98.98-.98" stroke-width="1"></path>
+                <path id="Vector 3945" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M.696 11.257 2.1 7.98h9.8l1.404 3.277a.813.813 0 0 1-.747 1.133H1.443a.813.813 0 0 1-.747-1.133" stroke-width="1"></path>
+              </g>
+            </svg>
+          </button>
+        </fieldset>
+        <!-- custom dimensions control group -->
+        <fieldset class="controls-group">
+          <!-- width control -->
           <label for="width-control" class="app__control">
             <span class="app__control-label">W</span>
             <input type="number" id="width-control" class="app__control-input" min="320" max="1920" value="1920" placeholder="-">
           </label>
+          <!-- height control -->
           <label for="height-control" class="app__control">
             <span class="app__control-label">H</span>
             <input type="number" id="height-control" class="app__control-input" min="640" max="1080" value="1080" placeholder="-">
           </label>
         </fieldset>
-        <fieldset class="app__file-loader">
+        <!-- local file loader group-->
+        <fieldset class="controls-group">
+          <!-- file loader control -->
           <label for="file-loader" class="app__control">
-            <span class="app__control-label loader">Load Local Demo</span>
+            <span class="app__control-label loader">Local Load</span>
             <div class="app-control-select-wrap">
               <select id="file-loader" class="app__control-input">
                 <option value="" disabled selected>Select a demo</option>
-                <!-- TODO: Options will be populated by JavaScript -->
               </select>
             </div>
           </label>
         </fieldset>
+        <!-- infomation group -->
+        <fieldset class="controls-group">
+          <!-- shortcuts and information dialog toggle -->
+          <button class="ui-button" title="Power user info">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor"></path>
+              <path d="M12 15.5V10.5" stroke="currentColor"></path>
+              <path d="M12 8V9" stroke="currentColor"></path>
+            </svg>
+            <!-- TODO: needs to open side drawer or toggle a modal -->
+          </button>
+        </fieldset>
       </div>
+      <span class="app__masthead-feedback">Waiting...</span>
     </header>
     <main class="app__window__view">
       <div class="viewport">
-        <iframe src="#" frameborder="0" id="viewport-target" class="viewport__frame"></iframe>
-        <div class="viewport__rs bottom"></div>
-        <div class="viewport__rs left"></div>
-        <div class="viewport__rs right"></div>
+        <iframe src="about:blank" frameborder="0" id="viewport-target" class="viewport__frame"></iframe>
+        <!-- resize handles -->
+        <div class="viewport__rs bottom" aria-label="resize the viewport height from the bottom up"></div>
+        <div class="viewport__rs left" aria-label="resize the viewport width from the left hand side"></div>
+        <div class="viewport__rs right" aria-label="resize the viewport height form the right hand side"></div>
       </div>
     </main>
   </section>
