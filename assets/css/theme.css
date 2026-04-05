@@ -7,6 +7,9 @@
   --theme-light: #f2f3f5;
   --theme-white: #ffffff;
   --theme-highlight: #8ce1d6;
+  --theme-highlight-400: #2eb2a0;
+  --theme-active: #ab8ce1;
+  --theme-active-400: #5f2eb2;
 
   --clamp-base: clamp(1.7rem, 1.64996rem + 0.139vi, 1.9rem);
 
@@ -49,6 +52,11 @@
 
   --ease-hop: cubic-bezier(.87, 0, .13, 1);
   --ease-hard-hop: cubic-bezier(1, 0, 0, 1);
+}
+
+::selection {
+  background-color: var(--theme-highlight, var(--theme-active, #fff));
+  color: var(--theme-dark, var(--theme-black, #000));
 }
 
 body {
