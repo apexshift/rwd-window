@@ -1,0 +1,20 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+}
+
+.visual {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  background-color: var(--theme-grey, gray);
+  overflow: hidden;
+
+  &.visual--5x3 {
+    aspect-ratio: 5/3;
+  }
+
+  &.visual--rounded {
+    border-radius: var(--space-8);
+  }
+}

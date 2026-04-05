@@ -1,0 +1,66 @@
+@import url("./css/reset.css") layer(reset);
+@import url("./css/theme.css") layer(theme);
+@import url("./css/utils.css") layer(utils);
+@layer reset, theme, utils;
+
+.masthead {
+  display: flex;
+  align-items: center;
+  padding-bottom: unset;
+}
+
+.masthead__container {
+  display: flex;
+  justify-content: space-between;
+
+  .masthead__brand {
+    text-decoration: none;
+    color: var(--theme-slate);
+    font-weight: 500;
+  }
+}
+
+.demo01 {
+  .demo01__content {
+    grid-column: 1 / span 5;
+
+  }
+
+  .demo01__content {
+    display: flex;
+    flex-direction: column;
+
+    .demo01__headline {
+      font-size: var(--head-1);
+    }
+
+    .demo01__context {
+      font-size: var(--text-md);
+      margin-top: var(--space-sm);
+    }
+  }
+
+  .demo01__actions {
+    display: flex;
+    gap: var(--space-md);
+    margin-top: var(--space-2xl);
+  }
+
+  .demo01__kicker {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    align-self: flex-start;
+    background-color: var(--theme-white);
+    color: var(--theme-slate);
+    border: 1px solid var(--theme-slate);
+    border-radius: 100vw;
+    padding: var(--space-4) var(--space-12);
+    margin-bottom: var(--space-xl);
+    order: -1;
+  }
+
+  .demo01__visual {
+    grid-column: span 6 / -1;
+  }
+}

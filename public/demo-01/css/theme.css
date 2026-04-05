@@ -1,0 +1,128 @@
+:root {
+  --theme-black: #000000;
+  --theme-dark: #161616;
+  --theme-slate: #252525;
+  --theme-grey: #7f7f7f;
+  --theme-concrete: #e2e3e5;
+  --theme-light: #f2f3f5;
+  --theme-white: #ffffff;
+  --theme-highlight: #8ce1d6;
+
+  --clamp-base: clamp(1.7rem, 1.64996rem + 0.139vi, 1.9rem);
+
+  --head-d3: clamp(5.076rem, 3.68028rem + 3.877vi, 10.659rem);
+  --head-d2: clamp(4.23rem, 3.28824rem + 2.616vi, 7.997rem);
+  --head-d1: clamp(3.525rem, 2.90652rem + 1.718vi, 5.999rem);
+  --head-1: clamp(2.938rem, 2.5474rem + 1.085vi, 4.5rem);
+  --head-2: clamp(2.448rem, 2.21616rem + 0.644vi, 3.376rem);
+  --head-3: clamp(2.04rem, 1.91688rem + 0.342vi, 2.5327rem);
+  --head-4: var(--clamp-base);
+  --text-xl: clamp(2.152rem, 1.94788rem + 0.567vi, 2.969rem);
+  --text-lg: clamp(1.9125rem, 1.79694rem + 0.321vi, 2.375rem);
+  --text-md: var(--clamp-base);
+  --text-sm: clamp(1.511rem, 1.50884rem + 0.006vi, 1.52rem);
+  --text-xs: clamp(1.343rem, 1.37468rem + -0.088vi, 1.216rem);
+  --line-height-heading: clamp(1.05, 1.0248 + 0.007vi, 1.15);
+  --line-height-tight: clamp(1.1, 1.0748 + 0.007vi, 1.2);
+  --line-height-snug: clamp(1.25, 1.2248 + 0.007vi, 1.35);
+  --line-height-normal: clamp(1.45, 1.414 + 0.01vi, 1.6);
+  --line-height-relaxed: clamp(1.6, 1.564 + 0.01vi, 1.75);
+
+  --space-4: clamp(0.4rem, 0.4rem + 0vi, 0.4rem);
+  --space-8: clamp(0.8rem, 0.8rem + 0vi, 0.8rem);
+  --space-12: clamp(1.2rem, 1.2rem + 0vi, 1.2rem);
+  --space-16: clamp(1.6rem, 1.6rem + 0vi, 1.6rem);
+  --space-24: clamp(2.4rem, 2.4rem + 0vi, 2.4rem);
+  --space-32: clamp(3.2rem, 3.2rem + 0vi, 3.2rem);
+  --space-48: clamp(4.8rem, 4.8rem + 0vi, 4.8rem);
+  --space-64: clamp(6.4rem, 6.4rem + 0vi, 6.4rem);
+  --space-72: clamp(7.2rem, 7.2rem + 0vi, 7.2rem);
+  --space-96: clamp(9.6rem, 9.6rem + 0vi, 9.6rem);
+
+  --space-2xs: clamp(0.43rem, 0.4174rem + 0.035vi, 0.48rem);
+  --space-xs: clamp(0.85rem, 0.82516rem + 0.069vi, 0.95rem);
+  --space-sm: clamp(1.28rem, 1.24256rem + 0.104vi, 1.43rem);
+  --space-md: clamp(1.7rem, 1.64996rem + 0.139vi, 1.9rem);
+  --space-lg: clamp(2.13rem, 2.06736rem + 0.174vi, 2.38rem);
+  --space-xl: clamp(2.55rem, 2.47512rem + 0.208vi, 2.85rem);
+  --space-2xl: clamp(3.4rem, 3.29992rem + 0.278vi, 3.8rem);
+  --space-3xl: clamp(5.1rem, 4.94988rem + 0.417vi, 5.7rem);
+  --space-4xl: clamp(6.8rem, 6.59984rem + 0.556vi, 7.6rem);
+
+  --speed-fastest: 150ms;
+  --speed-faster: 250ms;
+  --speed-fast: 350ms;
+  --speed-medium: 500ms;
+  --speed-slow: 750ms;
+  --speed-slower: 1000ms;
+  --speed-slowest: 1200ms;
+
+  --ease-hop: cubic-bezier(.87, 0, .13, 1);
+  --ease-hard-hop: cubic-bezier(1, 0, 0, 1);
+
+  --design-max-width: 1760;
+  --design-min-width: 360;
+  --design-padding-factor: 25;
+  --design-padding: round(100vw / var(--design-padding-factor, 25), 1rem);
+  --container-max: calc(var(--design-max-width) * 1px);
+}
+
+body {
+  font-size: 1.7rem;
+  line-height: 1.5;
+  letter-spacing: -1%;
+  background-color: var(--theme-light);
+  color: var(--theme-slate);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.1;
+  letter-spacing: -3%;
+  color: var(--theme-dark);
+}
+
+section, .section {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: var(--design-padding, 3vw);
+}
+
+.container {
+  display: flex;
+  width: 100%;
+  align-items: center;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: flex-start;
+
+  background-color: var(--theme-slate);
+  color: var(--theme-light);
+  text-decoration: none;
+  padding: var(--space-sm) var(--space-lg);
+  border: 2px solid var(--theme-slate);
+  border-radius: var(--space-4);
+  transform: scale(1);
+  transition: all var(--speed-fastest) var(--ease-hop, var(--ease-hard, ease-in-out));
+  cursor: pointer;
+
+  &:hover, &:active {
+    background-color: var(--theme-dark);
+    color: var(--theme-white);
+    transform: scale(.95);
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--theme-active-400);
+    outline-offset: 1px;
+  }
+
+  &.button--ghost {
+    background-color: transparent;
+    color: var(--theme-slate);
+  }
+}
