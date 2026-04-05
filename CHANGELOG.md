@@ -15,7 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.1-beta] - 2026-04-05
+
 ### Added
+- added initial desktop only demo 01
 - all ui states and feedback work in unison
 - resize the viewport from either the left or right side
 - resize the viewport from the bottom up
@@ -34,5 +37,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - file loading via select field
 - Initial UI has been styled complete with focus, hover and webkit updates for consistancy.
 - Created initial skeleton structure for the app and it's initial features.
-
-## [[0.0.1-beta](https://github.com/user/repo/version)] - YYYY-MM-DD

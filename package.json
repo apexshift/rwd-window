@@ -1,6 +1,6 @@
 {
   "name": "rwd-window",
-  "version": "0.0.0",
+  "version": "0.0.1-beta",
   "description": "A simple, lightweight responsive web design tool to help with quick rwd descision making\"",
   "keywords": [
     "responsive",
