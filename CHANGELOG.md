@@ -15,16 +15,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.1-beta] - 2026-04-05
+
 ### Added
-
-- Feature X
-
-### Changed
-
-- Feature that has changed.
-
-### Removed
-
-- Feature that was removed from **0.3.0**
-
-## [[0.0.1-beta](https://github.com/user/repo/version)] - YYYY-MM-DD
+- added initial desktop only demo 01
+- all ui states and feedback work in unison
+- resize the viewport from either the left or right side
+- resize the viewport from the bottom up
+- feedback elements
+- ui info button (placeholder only at the moment) - will load modal with power moves
+- clamp min and max height of viewport
+- clamp min and max width of viewport
+- height input control
+- width input control
+- ui buttons active state
+- desktop/laptop landscape device toggle
+- tablet portrait device toggle
+- mobile landscape device toggle
+- mobile portrait device toggle
+- Fit to container implemented
+- file loading via select field
+- Initial UI has been styled complete with focus, hover and webkit updates for consistancy.
+- Created initial skeleton structure for the app and it's initial features.

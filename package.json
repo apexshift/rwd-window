@@ -1,0 +1,28 @@
+{
+  "name": "rwd-window",
+  "version": "0.0.1-beta",
+  "description": "A simple, lightweight responsive web design tool to help with quick rwd descision making\"",
+  "keywords": [
+    "responsive",
+    "rwd",
+    "viewport",
+    "iframe",
+    "design",
+    "tool"
+  ],
+  "homepage": "https://github.com/apexshift/rwd-window#readme",
+  "bugs": {
+    "url": "https://github.com/apexshift/rwd-window/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apexshift/rwd-window.git"
+  },
+  "license": "MIT",
+  "author": "Aaron Smyth",
+  "type": "module",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
