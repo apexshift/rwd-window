@@ -1,8 +1,19 @@
 {
   "files": [
     {
+      "id": 1,
       "label": "Shipped Demo",
       "value": "./public/demo-01/index.html"
+    },
+    {
+      "id": 2,
+      "label": "Aaron Smyth",
+      "value": "https://aaronsmyth.co.uk"
+    },
+    {
+      "id": 2,
+      "label": "Plugins",
+      "value": "https://plugins.local"
     }
   ]
 }

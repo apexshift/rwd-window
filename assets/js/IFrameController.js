@@ -1,8 +1,12 @@
+import LocalLoader from "./LocalLoader.js";
+
 /**
  * IFrameResizeController - Singleton
  * 
  * The central engine for the RWD Window viewport preview tool.
  * Only one instance can exist. Use IFrameResizeController.getInstance() to access it.
+ * 
+ * @since 0.0.1-beta
  */
 
 let instance = null;
@@ -39,7 +43,10 @@ export default class IFrameResizeController {
     fitBtn: null,
     deviceButtons: null,
     resizeHandles: { left: null, right: null, bottom: null },
+    fileSelector: null,
   };
+
+  #files;
 
   // ==================== PRIVATE CONSTRUCTOR ====================
   constructor() {
@@ -47,6 +54,8 @@ export default class IFrameResizeController {
       throw new Error('IFrameResizeController is a singleton. Use IFrameResizeController.getInstance() instead.');
     }
     this.#collectElements();
+    this.#parseLocalFiles();
+    this.#initIFrameSrc(this.#elements.fileSelector.value);
     this.#setupEventListeners();
     this.#initializeState();
     instance = this;
@@ -75,6 +84,8 @@ export default class IFrameResizeController {
       '.controls-group button[data-mode]:not([data-mode="fit"]):not([data-mode="reset"])'
     );
 
+    this.#elements.fileSelector = document.querySelector('#file-loader');
+
     this.#elements.resizeHandles.left   = document.querySelector('.viewport__rs.left');
     this.#elements.resizeHandles.right  = document.querySelector('.viewport__rs.right');
     this.#elements.resizeHandles.bottom = document.querySelector('.viewport__rs.bottom');
@@ -82,6 +93,31 @@ export default class IFrameResizeController {
     if (!this.#elements.app_window || !this.#elements.viewport || !this.#elements.iframe) {
       throw new Error('Critical elements missing: app_window_view or viewport or iframe');
     }
+  }
+
+  #parseLocalFiles() {
+    const loader = LocalLoader.getInstance();
+
+    this.#files = loader.getFiles();
+
+    this.#populateFileSelector();
+  }
+
+  #populateFileSelector() {
+    if(!this.#files.length) {
+      console.warn('File loader config is empty.');
+      return;
+    }
+
+    this.#elements.fileSelector.innerHTML = this.#files.map(file => `<option value="${file.value}" title="${file.value}">${file.label}</option>`).join('');
+  }
+
+  #initIFrameSrc(url) {
+    if(typeof url !== "string") {
+      console.warn(`@param[url] must be typeof string, got ${typeof url}`);
+      return;
+    }
+    this.#elements.iframe.src = url;
   }
 
   // ==================== DEBOUNCE ====================
@@ -237,6 +273,11 @@ export default class IFrameResizeController {
 
     // Resize handles
     this.#setupResizeHandles();
+
+    // File Selector
+    this.#elements.fileSelector.addEventListener('change', e => {
+      this.#elements.iframe.src = e.target.value;
+    })
 
     // Window resize
     window.addEventListener('resize', this.#debounce(() => {
