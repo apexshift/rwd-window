@@ -35,4 +35,14 @@ export class UIFactory {
     container.className = 'controls-group';
     return container;
   }
+
+  static createHelpButton() {
+    const button = document.createElement('button');
+    button.className('ui-button');
+    button.title = 'Keyboard Shortcuts (?)';
+    button.dataset.action = 'show-help';
+    button.innerHTML = '?';
+    button.setAttribute('aria-label', 'Show keyboard shortcuts');
+    return button;
+  }
 }

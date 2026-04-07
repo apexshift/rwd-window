@@ -7,6 +7,7 @@
  * @since 0.1.0
  */
 import viewportConfig from '../../config/viewport-config.json' with {type: "json"};
+import { showError, showSuccess } from './Utils.js';
 
 import { bus } from './core/EventBus.js';
 import { state } from './core/AppState.js';
@@ -14,8 +15,7 @@ import { state } from './core/AppState.js';
 import LocalLoader from './managers/LocalLoader.js';
 import IFrameController from './managers/IFrameController.js';
 import BreakpointManager from './managers/BreakpointManager.js';
-
-import { showError, showSuccess } from './Utils.js';
+import KeyboardManager from './managers/KeyboardManager.js';
 
 export class App {
   static async init() {
@@ -26,6 +26,7 @@ export class App {
       const localLoader = LocalLoader;
       const iframeController = IFrameController;
       const breakpointManager = BreakpointManager;
+      const keyboardManager = KeyboardManager;
 
       // Setup demo selector
       const selectEl = document.getElementById('file-loader');
@@ -68,5 +69,11 @@ export class App {
     bus.on('config:error', ({ type, message }) => {
       showError(`Configuration Error (${type}): ${message}`);
     });
+
+    // Wire help button using EventBus
+    const helpBtn = document.getElementById("keyboard");
+    if(helpBtn) {
+      helpBtn.addEventListener('click', () => { bus.emit('ui:helpClicked'); });
+    }
   }
 }

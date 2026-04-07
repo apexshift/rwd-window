@@ -65,6 +65,11 @@ export class IFrameController {
       state.updateViewport(targetWidth, currentHeight);
       this.#updateFeedback();
     });
+    // Keyboard and other external fit requests
+    bus.on('viewport:fit', () => {
+      console.log('[IFrameController] Received viewport:fit event');
+      this.#fitToContainer();
+    });
   }
 
   // ==================== SINGLETON ACCESS ====================
@@ -201,6 +206,9 @@ export class IFrameController {
 
     this.#clearAllDeviceActiveStates();
     if (this.#elements.fitBtn) this.#elements.fitBtn.classList.add('active');
+
+    this.#updateFeedback();
+    console.log(`[IFrameController] Fit to Container applied: ${width}x${height}`);
   }
 
   #handleDeviceButtonClick(button) {
