@@ -2,7 +2,7 @@
 
 A lightweight, desktop-only responsive viewport simulator for rapid frontend prototyping. Built with vanilla JavaScript — no frameworks, no bloat.
 
-## Features (v0.1.0)
+## Features (v0.1.0-beta)
 
 - **Dynamic breakpoints** — Loaded from `config/breakpoints.json`
 - **Device button behavior**:
