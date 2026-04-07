@@ -1,0 +1,62 @@
+import { bus } from './EventBus.js';
+import viewportConfig from '../../../config/viewport-config.json' with { type: "json" };
+
+export class AppState {
+  static #instance = null;
+
+  #state = {
+    viewport: { width: 1920, height: 1080 },
+    mode: 'manual',
+    activeBreakpoint: null,
+    currentDemo: ''
+  };
+
+  #clamping = { ...viewportConfig.clamping };
+
+  static getInstance() {
+    if (!AppState.#instance) {
+      AppState.#instance = new AppState();
+    }
+    return AppState.#instance;
+  }
+
+  getClamping() {
+    return { ...this.#clamping };
+  }
+
+  clampWidth(width) {
+    return Math.max(this.#clamping.minWidth, Math.min(this.#clamping.maxWidth, Math.floor(width || 0)));
+  }
+
+  clampHeight(height) {
+    return Math.max(this.#clamping.minHeight, Math.min(this.#clamping.maxHeight, Math.floor(height || 0)));
+  }
+
+  updateViewport(width, height) {
+    const clamped = {
+      width: this.clampWidth(width),
+      height: this.clampHeight(height)
+    };
+    this.set('viewport', clamped);
+  }
+
+  get(key) { return this.#state[key]; }
+
+  set(key, value) {
+    const oldValue = this.#state[key];
+    if (JSON.stringify(oldValue) === JSON.stringify(value)) return;
+    this.#state[key] = value;
+    bus.emit(`state:${key}Changed`, { key, value, previous: oldValue });
+  }
+
+  getViewport() { return { ...this.#state.viewport }; }
+  getMode() { return this.#state.mode; }
+  getActiveBreakpoint() { return this.#state.activeBreakpoint; }
+  getCurrentDemo() { return this.#state.currentDemo; }
+
+  setMode(mode) { this.set('mode', mode); }
+  setActiveBreakpoint(bp) { this.set('activeBreakpoint', bp); }
+  setCurrentDemo(demo) { this.set('currentDemo', demo); }
+}
+
+export const state = AppState.getInstance();

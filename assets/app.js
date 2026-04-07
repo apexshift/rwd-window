@@ -1,4 +1,4 @@
-import IFrameController from './js/IFrameController.js';
+import { App } from './js/App.js';
 
 const DEV_MODE = false;
 
@@ -25,8 +25,7 @@ const FONTS_READY = (fn = () => {}) => {
 const INIT = () => {
   if(DEV_MODE) console.info('App initialized');
 
-  const controller = IFrameController.getInstance();
-  window.rwd = controller;
+  App.init();
 }
 
 window.addEventListener('load', WINDOW_LOADED);
