@@ -45,4 +45,34 @@ export class UIFactory {
     button.setAttribute('aria-label', 'Show keyboard shortcuts');
     return button;
   }
+
+  static createIncrementButton(direction) {
+    const btn = document.createElement('button');
+    btn.className = 'app__control-increment';
+    btn.textContent = direction === 'up' ? '+' : '−';
+    btn.dataset.direction = direction;
+    btn.setAttribute('aria-label', direction === 'up' ? 'Increment' : 'Decrement');
+    return btn;
+  }
+
+  static createControlWithIncrement(labelText, inputId, isWidth = true) {
+    const label = document.createElement('label');
+    label.className = 'app__control';
+    label.setAttribute('for', inputId);
+
+    label.innerHTML = `
+      <span class="app__control-label">${labelText}</span>
+      <div class="app__control-wrapper">
+        <button class="app__control-increment" data-direction="down">−</button>
+        <input type="number" id="${inputId}" class="app__control-input" 
+               min="${isWidth ? 320 : 640}" 
+               max="${isWidth ? 1920 : 1080}" 
+               value="${isWidth ? 1920 : 1080}" 
+               placeholder="-">
+        <button class="app__control-increment" data-direction="up">+</button>
+      </div>
+    `;
+
+    return label;
+  }
 }
