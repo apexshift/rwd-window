@@ -15,6 +15,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Dynamic breakpoint management loaded from `config/breakpoints.json`
+- Second-click toggle between min and max width on device buttons
+- Double-click any resize handle to reset to "Fit to Container"
+- Centralized viewport clamping via `config/viewport-config.json`
+- New project structure: `assets/js/core/`, `assets/js/managers/`, `config/`
+- Event-driven architecture using EventBus + AppState for better decoupling
+- User-facing error toasts for configuration issues
+
+### Changed
+- Hardcoded device buttons removed (now fully dynamic)
+- Clamping logic is now consistent across Fit mode and device breakpoints
+- Initial viewport size loaded from config
+
+### Fixed
+- Max/Min toggle now reliably applies correct widths
+- NaN errors when activating breakpoints eliminated
+- Import paths updated after folder restructuring
+
 ## [0.0.1-beta] - 2026-04-05
 
 ### Added

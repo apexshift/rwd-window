@@ -1,0 +1,28 @@
+{
+  "breakpoints": [
+    {
+      "label": "Mobile Portrait",
+      "minWidth": 320,
+      "maxWidth": 477,
+      "icon": "./assets/svg/ui-mobile-portrait-icon-dol.svg"
+    },
+    {
+      "label": "Mobile Landscape",
+      "minWidth": 478,
+      "maxWidth": 767,
+      "icon": "./assets/svg/ui-mobile-landscape-icon-dol.svg"
+    },
+    {
+      "label": "Tablet Portrait",
+      "minWidth": 768,
+      "maxWidth": 991,
+      "icon": "./assets/svg/ui-tablet-portrait-icon-dol.svg"
+    },
+    {
+      "label": "Laptop",
+      "minWidth": 992,
+      "maxWidth": 1920,
+      "icon": "./assets/svg/ui-laptop-icon-dol.svg"
+    }
+  ]
+}

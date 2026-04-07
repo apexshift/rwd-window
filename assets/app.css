@@ -196,11 +196,12 @@ select.app__control-input {
   &.is-dragging {
     transition: none !important;
   }
+
   .viewport__rs {
     --rail-width: var(--space-12);
     position: absolute;
     background-color: var(--theme-highlight);
-    opacity: 0.4;
+    opacity: 0.2;
     transition: opacity var(--speed-faster) var(--ease-hop);
     cursor: ns-resize;
 
