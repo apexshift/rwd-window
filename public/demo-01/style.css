@@ -21,22 +21,53 @@
 }
 
 .demo01 {
-  .demo01__content {
-    grid-column: 1 / span 5;
 
+  .demo01__container {
+    container-name: demo;
+    container-type: inline-size;
   }
 
   .demo01__content {
+    grid-column: 1 / span 5;
     display: flex;
     flex-direction: column;
 
     .demo01__headline {
       font-size: var(--head-1);
+
+      @container demo (width <= 810px) {
+        font-size: var(--head-d1);
+      }
+
+      @container demo (width <= 480px) {
+        font-size: var(--head-1);
+      }
+
+      @container demo (width <= 380px) {
+        font-size: var(--head-2);
+      }
     }
 
     .demo01__context {
       font-size: var(--text-md);
       margin-top: var(--space-sm);
+
+      @container demo (width <= 810px) {
+        font-size: var(--text-lg);
+      }
+
+      @container demo (width <= 480px) {
+        font-size: var(--text-md);
+      }
+    }
+
+    @container demo (width <= 810px) {
+      grid-column: 1 / -1;
+    }
+
+    @container demo (width <= 480px) {
+      text-align: center;
+      align-items: center;
     }
   }
 
@@ -44,6 +75,21 @@
     display: flex;
     gap: var(--space-md);
     margin-top: var(--space-2xl);
+
+    @container demo (width <= 870px) {
+      flex-direction: column;
+      align-self: flex-start;
+    }
+
+    @container demo (width <= 810px) {
+      flex-direction: row;
+      align-self: unset;
+    }
+
+    @container demo (width <= 380px) {
+      flex-direction: column;
+      align-self: stretch;
+    }
   }
 
   .demo01__kicker {
@@ -51,6 +97,7 @@
     align-items: center;
     justify-content: flex-start;
     align-self: flex-start;
+    font-size: var(--text-sm);
     background-color: var(--theme-white);
     color: var(--theme-slate);
     border: 1px solid var(--theme-slate);
@@ -58,9 +105,28 @@
     padding: var(--space-4) var(--space-12);
     margin-bottom: var(--space-xl);
     order: -1;
+
+    @container demo (width <= 480px) {
+      align-self: unset;
+    }
+
+    @container demo (width <= 380px) {
+      font-size: var(--text-xs);
+      margin-top: var(--space-md);
+    }
   }
 
   .demo01__visual {
     grid-column: span 6 / -1;
+
+    @container demo (width <= 1300px) {
+      aspect-ratio: 4/5;
+    }
+
+    @container demo (width <= 810px) {
+      grid-column: 1 / -1;
+      margin-top: var(--space-2xl);
+      aspect-ratio: 5/3;
+    }
   }
 }

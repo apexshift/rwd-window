@@ -1,49 +1,112 @@
-# 🚀 RWD Window
+# RWD Window
 
-A brief one-liner about what your project does and who it's for.
+A lightweight, desktop-only responsive viewport simulator for rapid frontend prototyping. Built with vanilla JavaScript — no frameworks, no bloat.
 
-## 📸 Demo
+## Features (v0.1.0-beta)
 
-![Demo GIF](https://your-demo-link.com/demo.gif)  
-[Live Site](https://your-live-site.com)
+- **Dynamic breakpoints** — Loaded from `config/breakpoints.json`
+- **Device button behavior**:
+  - Single click → Set to max width
+  - Second click on same button → Toggle to min width
+- **Resize handle behavior**:
+  - honours global clamp settings
+  - double click any handle → Fit-to-container
+- **Fit to Container** mode with consistent clamping
+- **Drag resizing** with smooth handles and visual feedback
+- **Manual width/height inputs** (supports blur + Enter, '-' shortcut for fit)
+- **Local demo loader** via `config/file-loader.json`
+- **Centralized clamping** configurable in `config/viewport-config.json`
+- **User-friendly error toasts** for configuration issues
 
-## 📦 Installation
+## Configuration
 
-Clone the repo and simply open in a browser.
+### 1. Breakpoints (`config/breakpoints.json`)
 
-## 🛠 Usage
+```json
+{
+  "breakpoints": [
+    {
+      "label": "Mobile Portrait",
+      "minWidth": 320,
+      "maxWidth": 477,
+      "icon": "./assets/svg/ui-mobile-portrait-icon.svg"
+    },
+    {
+      "label": "Mobile Landscape",
+      "minWidth": 478,
+      "maxWidth": 767,
+      "icon": "./assets/svg/ui-mobile-landscape-icon.svg"
+    },
+    {
+      "label": "Tablet Portrait",
+      "minWidth": 768,
+      "maxWidth": 991,
+      "icon": "./assets/svg/ui-tablet-portrait-icon.svg"
+    },
+    {
+      "label": "Laptop",
+      "minWidth": 992,
+      "maxWidth": 1920,
+      "icon": "./assets/svg/ui-laptop-icon.svg"
+    }
+  ]
+}
+```
 
-Simple create your demo in the 'demos' directory (example included) and then open in the browser.
-- Can also be served using an extension like 'Live Server' in VSCode, or
-- Setup up a local webserver on your machine with something like 'Mamp/Mamp Pro/XAMPP/WAMP'
+### 2. Viewport Settings (`config/viewport-config.json`)
 
-## ✨ Features
-- Load demonstrations (async load) into the *iframe* viewport
-- Quick actions to toggle between common media query breakpoint (Pulled from Webflow and Bricks)
-- Manually adjust width and height of the *iframe* viewport
-  - width is clamped between 320px to 1920px
-  - height is clamped between 640px and 1080px
-- Resize manually by dragging the edge
-  - Double click edge to restore to full width and height
-- Fast and lightweight
-- Clean UI with dark mode
-- Realtime updates
-- Works offline
+```json
+{
+  "clamping": {
+    "minWidth": 320,
+    "maxWidth": 1920,
+    "minHeight": 640,
+    "maxHeight": 1080
+  },
+  "initialViewport": {
+    "width": 1920,
+    "height": 1080
+  }
+}
+```
 
-## 🧰 Tech Stack
+### 3. Local Demos (`config/file-laoder.json`)
 
-- HTML
-- Vanilla Javascript
-- CSS
+```json
+{
+  "files": [
+    {
+      "id": 1,
+      "label": "Shipped Demo",
+      "value": "./public/demo-01/index.html"
+    }
+  ]
+}
+```
 
-## 🤝 Contributing
+## Usage
+1. Open `index.html` in a browser (or serve with Live Server).
+2. Use the device buttons
+ - Click once -> Max width
+ - Click again -> Min width
+ - Double Click -> Fit to container
+3. Drag the resize handles or use width/height inputs for manual control.
+4. Select demos from the dropdown.
 
-Pull requests are welcome! For major changes, please open an issue first to discuss what you’d like to change.
+## Project Structure
 
-## 📄 License
+```text
+config/
+├── breakpoints.json
+├── file-loader.json
+└── viewport-config.json
 
-MIT License  
-See `LICENSE` file for details.
+assets/js/
+├── core/           # EventBus, AppState, UIFactory
+├── managers/       # LocalLoader, IFrameController, BreakpointManager
+└── Utils.js
+```
 
-## 🙌 Credits
-Thanks to [@aaron_smyth](https://github.com/aaron_smyth) for concept, feedback and suggestions.
+## Roadmap
+
+See the full roadmap in the project for upcoming features (keyboard shortcuts, orientation toggle, LocalStorage persistence, etc.).

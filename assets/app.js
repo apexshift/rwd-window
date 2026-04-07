@@ -1,5 +1,4 @@
-import { populateFilesSelect, initIFrameSrc } from './js/file-loader.js';
-import IFrameResizeController from './js/iFrameResizeController.js';
+import { App } from './js/App.js';
 
 const DEV_MODE = false;
 
@@ -26,12 +25,7 @@ const FONTS_READY = (fn = () => {}) => {
 const INIT = () => {
   if(DEV_MODE) console.info('App initialized');
 
-  populateFilesSelect();
-  initIFrameSrc();
-
-  // TODO: Viewport Buttons must toggle iframe width to pre-defined widths.
-  const controller = IFrameResizeController.getInstance();
-  window.rwd = controller;
+  App.init();
 }
 
 window.addEventListener('load', WINDOW_LOADED);
