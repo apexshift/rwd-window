@@ -6,7 +6,7 @@ A lightweight, desktop-only responsive viewport simulator for rapid frontend pro
 - Dynamic device breakpoints loaded from `config.json`
 - Device buttons with single-click (Max) and second-click (Min) toggle
 - Drag-to-resize with smooth handles
-- Manual width/height inputs with ± increment buttons (coming soon)
+- Manual width/height inputs with ± increment buttons
 - Fit to Container mode
 - Local and remote demo loading
 - Keyboard shortcuts:
@@ -73,8 +73,36 @@ config.json
 index.html
 ```
 
+## Event System
+
+The application uses a lightweight EventBus for decoupled communication between modules. Below is a complete list of all registered events:
+
+### Registered Events
+
+| Event Name                        | Emitted By                  | Listened By                          | Purpose |
+|-----------------------------------|-----------------------------|--------------------------------------|-------|
+| `app:ready`                       | `App.js`                    | `BreakpointManager`, `UIManager`     | Signals that initialization is complete and managers can set up |
+| `state:viewportChanged`           | `AppState.js`               | `IFrameController`                   | Viewport size (width/height) has changed |
+| `state:modeChanged`               | `AppState.js`               | `IFrameController`                   | Current mode changed (`manual`, `device`, or `fit`) |
+| `state:activeBreakpointChanged`   | `AppState.js`               | `IFrameController`, `BreakpointManager` | Active breakpoint or its min/max state changed |
+| `state:currentDemoChanged`        | `AppState.js`               | `LocalLoader`                        | Current demo URL changed |
+| `breakpoint:activated`            | `BreakpointManager`         | `IFrameController`                   | A breakpoint was activated (includes min/max info) |
+| `viewport:fit`                    | `KeyboardManager`, Fit button | `IFrameController`                 | Request to switch to Fit to Container mode |
+| `ui:helpClicked`                  | Help button (`UIFactory`)   | `KeyboardManager`                    | User clicked the help button |
+| `config:error`                    | `BreakpointManager`, `App.js` | `App.js`                           | Configuration loading error (shown as toast) |
+| `input:stepChanged`               | `UIManager`                 | `IFrameController`                   | ± button click or arrow key increment request |
+| `input:stepCommit`                | `UIManager`                 | `IFrameController`                   | User committed a value (on blur or Enter key) |
+
+### Notes
+
+- All events are handled through the central `EventBus`.
+- `state:*Changed` events are automatically emitted whenever `AppState.set()` is called.
+- Input-related events (`input:stepChanged`, `input:stepCommit`) power the ± increment buttons and keyboard navigation inside the width/height fields.
+- The help button and `?` key both emit `ui:helpClicked`.
+
+This event system keeps the managers loosely coupled and makes the codebase easier to extend.
+
 ## Roadmap
-- Advanced input controls (± buttons, improved keyboard navigation inside inputs)
 - Orientation toggle
 - Configurable clamping limits UI
 - LocalStorage persistence

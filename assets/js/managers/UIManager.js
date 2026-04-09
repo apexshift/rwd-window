@@ -70,12 +70,59 @@ export class UIManager
         );
         helpContainer.appendChild(this.#elements.helpBtn);
         this.#elements.masthead.appendChild(helpContainer);
+
+        this.#setupInputListeners();
+    }
+
+    #setupInputListeners() {
+        const widthInput = this.widthInput.querySelector('input');
+        const heightInput = this.heightInput.querySelector('input');
+
+        if(!widthInput || !heightInput) return;
+
+        // Step buttons
+        const stepButtons = this.stepButtons;
+        stepButtons.forEach(btn => {
+            btn.addEventListener('click', e => {
+                const direction = btn.dataset.direction === 'up' ? 1 : -1;
+                const isWidth = btn.dataset.target === 'width';
+                const step = e.shiftKey ? 10 : ((e.ctrlKey || e.metaKey) ? 50 : 1);
+
+                bus.emit('input:stepChanged', {
+                    target: isWidth ? 'width' : 'height',
+                    direction,
+                    step
+                });
+            });
+        });
+
+        // Keyboard arrows inside inputs
+        const handleInputKeydown = (input, isWidth) => e => {
+            if(e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                const step = e.shiftKey ? 10 : ((e.ctrlKey || e.metaKey) ? 50 : 1);
+                const direction = e.key === 'ArrowUp' ? 1 : -1;
+                bus.emit('input:stepChanged', {
+                    target: isWidth ? 'width' : 'height',
+                    direction,
+                    step
+                });
+                e.preventDefault();
+            } else if(e.key === 'Enter') {
+                bus.emit('input:stepCommit', {target: isWidth ? 'width' : 'height' });
+            }
+        }
+
+        widthInput.addEventListener('keydown', handleInputKeydown(widthInput, true));
+        widthInput.addEventListener('blur', () => bus.emit('input:stepCommit', { target: 'width' }));
+        heightInput.addEventListener('keydown', handleInputKeydown(heightInput, false));
+        heightInput.addEventListener('blur', () => bus.emit('input:stepCommit', { target: 'height' }));
     }
 
     get masthead() { return this.#elements.masthead }
     get FitBtn() { return this.#elements.fitBtn }
     get deviceContainer() { return this.#elements.deviceContainer }
     get widthInput() { return this.#elements.widthInput }
+    get stepButtons() { return [...this.widthInput.querySelectorAll('.app__control-increment'), ...this.heightInput.querySelectorAll('.app__control-increment') ]; }
     get heightInput() { return this.#elements.heightInput }
     get fileSelect() { return this.#elements.fileSelect }
     get helpBtn() { return this.#elements.helpBtn }

@@ -66,10 +66,10 @@ export class IFrameController {
       this.#updateFeedback();
     });
     // Keyboard and other external fit requests
-    bus.on('viewport:fit', () => {
-      console.log('[IFrameController] Received viewport:fit event');
-      this.#fitToContainer();
-    });
+    bus.on('viewport:fit', () => { this.#fitToContainer(); });
+    // Advanced width and height inputs
+    bus.on('input:stepChanged', ({target, direction, step}) => { this.#handleInputStepChanged(target, direction, step); });
+    bus.on('input:stepCommit', ({target}) => { this.#handleInputStepCommit(target); });
   }
 
   // ==================== SINGLETON ACCESS ====================
@@ -89,8 +89,8 @@ export class IFrameController {
     this.#elements.feedback = document.querySelector('.app__masthead-feedback');
 
 
-    this.#elements.widthInput = UI.widthInput;
-    this.#elements.heightInput = UI.heightInput;
+    this.#elements.widthInput = UI.widthInput.querySelector('input');
+    this.#elements.heightInput = UI.heightInput.querySelector('input');
     this.#elements.fitBtn = UI.fitBtn;
     
     this.#elements.deviceButtons = document.querySelectorAll(
@@ -210,7 +210,6 @@ export class IFrameController {
     if (this.#elements.fitBtn) this.#elements.fitBtn.classList.add('active');
 
     this.#updateFeedback();
-    console.log(`[IFrameController] Fit to Container applied: ${width}x${height}`);
   }
 
   #handleDeviceButtonClick(button) {
@@ -240,6 +239,38 @@ export class IFrameController {
   #clearAllDeviceActiveStates() {
     this.#elements.deviceButtons.forEach(btn => btn.classList.remove('active'));
     if (this.#elements.fitBtn) this.#elements.fitBtn.classList.remove('active');
+  }
+
+  #handleInputStepChanged(target, direction, step) {
+    const current = state.getViewport();
+    if(target === 'width') {
+      this.#setSize(current.width + direction * step, current.height, 'manual');
+    } else {
+      this.#setSize(current.width, current.height + direction * step, 'manual');
+    }
+  }
+
+  #handleInputStepCommit(target) {
+    const input = target === 'width' ? UIManager.getInstance().widthInput.querySelector('input') : UIManager.getInstance().heightInput.querySelector('input');
+    if(!input) return;
+
+    let val = input.value.trim();
+    if(val === '-') {
+      this.#fitToContainer();
+      return;
+    }
+
+    let num = parseInt(val);
+    if(isNaN(num)) {
+      input.value = target === 'width' ? state.getViewport().width : state.getViewport().height;
+      return;
+    }
+
+    if(target === 'width') {
+      this.#setSize(num, state.getViewport().height, 'manual');
+    } else {
+      this.#setSize(state.getViewport().width, num, 'manual');
+    }
   }
 
   // ==================== EVENT SETUP ====================
@@ -288,7 +319,7 @@ export class IFrameController {
     }, 120));
   }
 
-  // ==================== RESIZE HANDLES (unchanged core logic) ====================
+  // ==================== RESIZE HANDLES ====================
   #setupResizeHandles() {
     const { left, right, bottom } = this.#elements.resizeHandles;
 
