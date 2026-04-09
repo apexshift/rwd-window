@@ -40,8 +40,6 @@ export class BreakpointManager {
                 maxWidth: Number(bp.maxWidth ?? bp['max-width']),
                 icon: bp.icon
             })).filter(bp => bp.label && !isNaN(bp.minWidth) && !isNaN(bp.maxWidth));
-
-            console.log(`✅ Loaded ${this.#breakpoints.length} breakpoints`);
             bus.emit('breakpoints:loaded', { count: this.#breakpoints.length });
         } catch (err) {
             console.error('Breakpoint config load failed:', err);

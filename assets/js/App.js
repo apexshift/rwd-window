@@ -59,7 +59,7 @@ export class App {
           this.#uiControls.fitContainerBtn = btn;
           break;
         case "devices": 
-          // handled by BreakpointManager
+          // TODO: currently handled by BreakpointManager, but UI elements should be setup here?
 
           break;
         case "dimensions":
@@ -87,17 +87,12 @@ export class App {
 
       this.#mastheadWrapper.appendChild(node);
     });
-
-    console.log(this.#uiControls);
   }
 
   async init() {
-    console.log('RWD Window initializsing...');
-
     this.#initUI();
 
     try {
-      console.log( this.#uiControls );
       // Instantiate all singletons
       const localLoader = LocalLoader.getInstance();
       const breakpointManager = BreakpointManager.getInstance();
@@ -124,16 +119,7 @@ export class App {
 
       // Signal that everything is ready → managers initialize (dynamic buttons, etc.)
       bus.emit('app:ready');
-
-      console.log('✅ Core infrastructure initialized successfully');
-      console.log(`   • UI ready`);
-      console.log(`   • LocalLoader ready (${localLoader.getFiles()?.length || 0} demos)`);
-      console.log(`   • IFrameController ready`);
-      console.log(`   • BreakpointManager ready (${breakpointManager.getBreakpoints()?.length || 0} breakpoints)`);
-      console.log(`   • Clamping: ${JSON.stringify(state.getClamping())}`);
-
       showSuccess('RWD window is ready');
-
     } catch (err) {
       console.error('App initialization failed:', err);
       showError(`Failed to initialize RWD Window: ${err.message || 'Unknown error'}`, {duration: 5000});

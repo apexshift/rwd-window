@@ -59,7 +59,6 @@ export class KeyboardManager {
                     break;
 
                 case 'f':
-                case 'r':
                     this.#triggerFit();
                     e.preventDefault();
                     break;
