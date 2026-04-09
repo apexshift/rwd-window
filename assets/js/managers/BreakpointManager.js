@@ -12,6 +12,7 @@ import config from "../../../config.json" with { type: "json" };
 import { bus } from '../core/EventBus.js';
 import { state } from '../core/AppState.js';
 import { UIFactory } from '../core/UIFactory.js';
+import UIManager from "./UIManager.js";
 
 let instance = null;
 
@@ -54,8 +55,13 @@ export class BreakpointManager {
     }
 
     #initializeUI() {
-        this.#buttonContainer = document.querySelector('.controls-group#devices');
-        if (!this.#buttonContainer) return;
+        const UI = UIManager.getInstance();
+        this.#buttonContainer = UI.deviceContainer;
+
+        if (!this.#buttonContainer) {
+            console.warn('Device button container not found via UIManager.');
+            return;
+        }
 
         this.#breakpoints.forEach((bp, index) => {
             const button = UIFactory.createDeviceButton(bp, index);

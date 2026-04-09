@@ -1,5 +1,7 @@
+import config from '../../../config.json' with {type: "json"};
 import { bus } from '../core/EventBus.js';
 import { state } from '../core/AppState.js';
+import UIManager from './UIManager.js';
 
 /**
  * IFrameController - Singleton
@@ -16,10 +18,10 @@ let instance = null;
 export class IFrameController {
   // ==================== DEFAULTS ====================
   #defaults = {
-    minWidth: 320,
-    maxWidth: 1920,
-    minHeight: 640,
-    maxHeight: 1080,
+    minWidth: config.app.clamping.minWidth,
+    maxWidth: config.app.clamping.maxWidth,
+    minHeight: config.app.clamping.minHeight,
+    maxHeight: config.app.clamping.maxHeight,
   };
 
   // ==================== DOM REFERENCES ====================
@@ -80,13 +82,16 @@ export class IFrameController {
 
   // ==================== DOM COLLECTION ====================
   #collectElements() {
+    const UI = UIManager.getInstance();
     this.#elements.app_window = document.querySelector('.app__window__view');
     this.#elements.viewport = document.querySelector('.viewport');
     this.#elements.iframe = document.getElementById('viewport-target');
     this.#elements.feedback = document.querySelector('.app__masthead-feedback');
-    this.#elements.widthInput = document.getElementById('width-control');
-    this.#elements.heightInput = document.getElementById('height-control');
-    this.#elements.fitBtn = document.querySelector('button[data-mode="fit"]');
+
+
+    this.#elements.widthInput = UI.widthInput;
+    this.#elements.heightInput = UI.heightInput;
+    this.#elements.fitBtn = UI.fitBtn;
     
     this.#elements.deviceButtons = document.querySelectorAll(
       '.controls-group button[data-mode]:not([data-mode="fit"])'
@@ -240,7 +245,6 @@ export class IFrameController {
   // ==================== EVENT SETUP ====================
   #setupEventListeners() {
     // Fit / Reset
-    this.#elements.resetBtn?.addEventListener('click', () => this.#fitToContainer());
     this.#elements.fitBtn?.addEventListener('click', () => this.#fitToContainer());
 
     // Device buttons (still hardcoded for now)

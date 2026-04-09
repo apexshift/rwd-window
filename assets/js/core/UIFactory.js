@@ -4,6 +4,7 @@
  */
 import config from '../../../config.json' with {type: "json"};
 import { bus } from './EventBus.js';
+import { state } from './AppState.js';
 
 export class UIFactory {
 
@@ -76,6 +77,7 @@ export class UIFactory {
 
   static createHelpButton(label, icon = "") {
     const button = this.#createButton(label, icon);
+    button.id = "keyboard-help-btn";
     button.title = 'Keyboard Shortcuts (?)';
     button.dataset.action = 'show-help';
     button.setAttribute('aria-label', 'Show keyboard shortcuts');
@@ -152,6 +154,11 @@ export class UIFactory {
 
     select.appendChild(option);
     wrapper.appendChild(select);
+
+    select.addEventListener('change', e => {
+      state.setCurrentDemo(e.target.value);
+      bus.emit('demo:changed', { value: e.target.value });
+    });
 
     return label;
   }

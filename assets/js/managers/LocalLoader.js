@@ -1,6 +1,7 @@
 import config from "../../../config.json" with { type: "json" };
 import { bus } from '../core/EventBus.js';
 import { state } from '../core/AppState.js';
+import UIManager from "./UIManager.js";
 
 /**
  * LocalLoader – Singleton
@@ -90,24 +91,26 @@ export class LocalLoader {
         }
     }
 
-    // Future: expose for App orchestrator if needed
-    populateSelect(selectElement) {
-        if (!selectElement) return;
-        this.#defaults.selectElement = selectElement;
+    populateSelect() {
+        const selectEl = UIManager.getInstance().fileSelect.querySelector('#file-loader');
+        if(!selectEl) {
+            console.warn('Demo select element not found via UIManager');
+            return;
+        }
 
-        selectElement.innerHTML = '';
+        selectEl.innerHTML = '';
+
         this.#files.forEach(file => {
             const option = document.createElement('option');
             option.value = file.value;
             option.textContent = file.label;
-            selectElement.appendChild(option);
+            selectEl.appendChild(option);
         });
 
         // Set initial from state
         const current = state.getCurrentDemo();
-        if (current) selectElement.value = current;
+        if (current) selectEl.value = current;
     }
 }
 
-// Keep backward compatibility for your existing code
 export default LocalLoader;
