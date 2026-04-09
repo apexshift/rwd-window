@@ -1,88 +1,48 @@
 # RWD Window
 
-A lightweight, desktop-only responsive viewport simulator for rapid frontend prototyping. Built with vanilla JavaScript — no frameworks, no bloat.
+A lightweight, desktop-only responsive viewport simulator for rapid frontend prototyping. Built with pure vanilla JavaScript.
 
 ## Features (v0.1.0-beta)
+- Dynamic device breakpoints loaded from `config.json`
+- Device buttons with single-click (Max) and second-click (Min) toggle
+- Drag-to-resize with smooth handles
+- Manual width/height inputs with ± increment buttons (coming soon)
+- Fit to Container mode
+- Local and remote demo loading
+- Keyboard shortcuts:
+  - Arrow keys for precise resizing (with Shift/Ctrl modifiers)
+  - 1–9 for quick breakpoint selection (with toggle)
+  - F for Fit to Container
+  - Esc to clear mode
+  - Tab/Shift+Tab to cycle breakpoints
+  - H to toggle min/max height clamp
+  - ? or Shift+/ for help overlay
+- Shortcut tooltips on all buttons
+- Centralized clamping and initial viewport settings in `config.json`
+- User-friendly toast messages
 
-- **Dynamic breakpoints** — Loaded from `config/breakpoints.json`
-- **Device button behavior**:
-  - Single click → Set to max width
-  - Second click on same button → Toggle to min width
-- **Resize handle behavior**:
-  - honours global clamp settings
-  - double click any handle → Fit-to-container
-- **Fit to Container** mode with consistent clamping
-- **Drag resizing** with smooth handles and visual feedback
-- **Manual width/height inputs** (supports blur + Enter, '-' shortcut for fit)
-- **Local demo loader** via `config/file-loader.json`
-- **Centralized clamping** configurable in `config/viewport-config.json`
-- **User-friendly error toasts** for configuration issues
+## Configuration (`config.json`)
 
-## Configuration
-
-### 1. Breakpoints (`config/breakpoints.json`)
-
-```json
-{
-  "breakpoints": [
-    {
-      "label": "Mobile Portrait",
-      "minWidth": 320,
-      "maxWidth": 477,
-      "icon": "./assets/svg/ui-mobile-portrait-icon.svg"
-    },
-    {
-      "label": "Mobile Landscape",
-      "minWidth": 478,
-      "maxWidth": 767,
-      "icon": "./assets/svg/ui-mobile-landscape-icon.svg"
-    },
-    {
-      "label": "Tablet Portrait",
-      "minWidth": 768,
-      "maxWidth": 991,
-      "icon": "./assets/svg/ui-tablet-portrait-icon.svg"
-    },
-    {
-      "label": "Laptop",
-      "minWidth": 992,
-      "maxWidth": 1920,
-      "icon": "./assets/svg/ui-laptop-icon.svg"
-    }
-  ]
-}
-```
-
-### 2. Viewport Settings (`config/viewport-config.json`)
+The project uses a unified single `config.json` file:
 
 ```json
 {
-  "clamping": {
-    "minWidth": 320,
-    "maxWidth": 1920,
-    "minHeight": 640,
-    "maxHeight": 1080
+  "app": {
+    "clamping": { ... },
+    "initialViewport": { ... }
   },
-  "initialViewport": {
-    "width": 1920,
-    "height": 1080
-  }
+  "ui_controls": {
+    "fitToContainer": { ... },
+    "breakpoints": [ ... ],
+    "help": { ... }
+  },
+  "files": [ ... ]
 }
 ```
 
-### 3. Local Demos (`config/file-laoder.json`)
+## Keyboard Shortcuts
 
-```json
-{
-  "files": [
-    {
-      "id": 1,
-      "label": "Shipped Demo",
-      "value": "./public/demo-01/index.html"
-    }
-  ]
-}
-```
+Press `?` or click the help button (?) to see full list.
 
 ## Usage
 1. Open `index.html` in a browser (or serve with Live Server).
@@ -96,17 +56,26 @@ A lightweight, desktop-only responsive viewport simulator for rapid frontend pro
 ## Project Structure
 
 ```text
-config/
-├── breakpoints.json
-├── file-loader.json
-└── viewport-config.json
-
 assets/js/
-├── core/           # EventBus, AppState, UIFactory
-├── managers/       # LocalLoader, IFrameController, BreakpointManager
+├── core/
+├──── AppState.js
+├──── EventBus.js
+├──── UIFactory.js
+├── managers/
+├──── BreakpointManager.js
+├──── IFrameController.js
+├──── KeyboardManager.js
+├──── LocalLoader.js
+├──── UIManager.js
+├── App.js
 └── Utils.js
+config.json
+index.html
 ```
 
 ## Roadmap
-
-See the full roadmap in the project for upcoming features (keyboard shortcuts, orientation toggle, LocalStorage persistence, etc.).
+- Advanced input controls (± buttons, improved keyboard navigation inside inputs)
+- Orientation toggle
+- Configurable clamping limits UI
+- LocalStorage persistence
+- Export current viewport state

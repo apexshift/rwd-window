@@ -13,6 +13,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Fixed** for any bug fixes.
 - **Security** in case of vulnerabilities.
 
+## [unreleased]
+
+### Added
+- Keyboard shortcuts (arrows for resize, 1-9 for breakpoints with toggle, F/R for Fit, Esc to clear mode, Tab/Shift+Tab to cycle, H to toggle height clamp)
+- UIManager as single source of truth for UI creation and element references
+- Shortcut tooltips on all UI buttons (Style A: "Mobile Portrait (1)", "Fit to Container (F / R)", "Keyboard Shortcuts (?)")
+- Pure EventBus wiring for help button
+- Cleaner App.js orchestrator with reduced duplication
+
+### Changed
+- UI creation centralized in UIManager
+- Managers now request UI elements from UIManager instead of direct DOM queries
+- Double-click behavior on device buttons preserved (only resize handles trigger Fit)
+- Config loading simplified to single config.json
+
+### Fixed
+- Help button now reliably opens keyboard shortcuts modal
+- Reduced UI creation duplication between App.js and managers
+- Improved consistency in button creation and tooltip handling
+
 ## [0.1.0-beta] - 2026-04-07
 
 ### Added
