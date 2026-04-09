@@ -25,7 +25,8 @@ const FONTS_READY = (fn = () => {}) => {
 const INIT = () => {
   if(DEV_MODE) console.info('App initialized');
 
-  App.init();
+  const app = new App()
+  app.init();
 }
 
 window.addEventListener('load', WINDOW_LOADED);

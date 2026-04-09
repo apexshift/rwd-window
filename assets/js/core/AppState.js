@@ -1,5 +1,5 @@
 import { bus } from './EventBus.js';
-import viewportConfig from '../../../config/viewport-config.json' with { type: "json" };
+import config from '../../../config.json' with { type: "json" };
 
 export class AppState {
   static #instance = null;
@@ -11,7 +11,7 @@ export class AppState {
     currentDemo: ''
   };
 
-  #clamping = { ...viewportConfig.clamping };
+  #clamping = { ...config.app.clamping };
 
   static getInstance() {
     if (!AppState.#instance) {

@@ -14,56 +14,8 @@
         <!-- TODO: App logo, SVG code here -->
       </div>
       <div class="masthead__controls">
-        <!-- fit to container mode -->
-        <fieldset class="controls-group">
-          <!-- fit to container control -->
-          <button class="ui-button active" title="Fit to container" data-mode="fit">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22 6V2H18" stroke="currentColor" stroke-miterlimit="10"></path>
-              <path d="M2 18V22H6" stroke="currentColor" stroke-miterlimit="10"></path>
-              <path d="M18 22H22V18" stroke="currentColor" stroke-miterlimit="10"></path>
-              <path d="M6 2H2V6" stroke="currentColor" stroke-miterlimit="10"></path>
-            </svg>
-          </button>
-        </fieldset>
+        <!-- control groups will be dynamically added here -->
         <fieldset id="devices" class="controls-group"></fieldset>
-        <!-- custom dimensions control group -->
-        <fieldset class="controls-group">
-          <!-- width control -->
-          <label for="width-control" class="app__control">
-            <span class="app__control-label">W</span>
-            <input type="number" id="width-control" class="app__control-input" min="320" max="1920" value="1920" placeholder="-">
-          </label>
-          <!-- height control -->
-          <label for="height-control" class="app__control">
-            <span class="app__control-label">H</span>
-            <input type="number" id="height-control" class="app__control-input" min="640" max="1080" value="1080" placeholder="-">
-          </label>
-        </fieldset>
-        <!-- local file loader group-->
-        <fieldset class="controls-group">
-          <!-- file loader control -->
-          <label for="file-loader" class="app__control">
-            <span class="app__control-label loader">Local Load</span>
-            <div class="app-control-select-wrap">
-              <select id="file-loader" class="app__control-input">
-                <option value="" disabled selected>Select a demo</option>
-              </select>
-            </div>
-          </label>
-        </fieldset>
-        <!-- infomation group -->
-        <fieldset class="controls-group">
-          <!-- shortcuts and information dialog toggle -->
-          <button class="ui-button" title="Power user info">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor"></path>
-              <path d="M12 15.5V10.5" stroke="currentColor"></path>
-              <path d="M12 8V9" stroke="currentColor"></path>
-            </svg>
-            <!-- TODO: needs to open side drawer or toggle a modal -->
-          </button>
-        </fieldset>
       </div>
       <span class="app__masthead-feedback">Waiting...</span>
     </header>
