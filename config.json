@@ -1,0 +1,69 @@
+{
+    "app": {
+        "clamping": {
+            "minWidth": 320,
+            "maxWidth": 1920,
+            "minHeight": 640,
+            "maxHeight": 1080
+        },
+        "defaultBehavior": "clamp",
+        "initialViewport": {
+            "width": 1920,
+            "height": 1080 
+        }
+    },
+    "ui_controls": {
+        "fitToContainer": {
+            "label": "Fit",
+            "icon": "./assets/svg/ui-fit-to-container-icon-dol.svg"
+        },
+        "breakpoints": [
+            {
+                "label": "Mobile Portrait",
+                "icon": "./assets/svg/ui-mobile-portrait-icon-dol.svg",
+                "minWidth": 320,
+                "maxWidth": 477
+            },
+            {
+                "label": "Mobile Landscape",
+                "icon": "./assets/svg/ui-mobile-landscape-icon-dol.svg",
+                "minWidth": 478,
+                "maxWidth": 767
+            },
+            {
+                "label": "Tablet Portrait",
+                "icon": "./assets/svg/ui-tablet-portrait-icon-dol.svg",
+                "minWidth": 768,
+                "maxWidth": 991
+            },
+            {
+                "label": "Laptop",
+                "icon": "./assets/svg/ui-laptop-icon-dol.svg",
+                "minWidth": 992,
+                "maxWidth": 1279
+            },
+            {
+                "label": "Desktop",
+                "icon": "./assets/svg/ui-desktop-icon-dol.svg",
+                "minWidth": 1280,
+                "maxWidth": 1920
+            }
+        ],
+        "help": {
+            "label": "Help",
+            "icon": "./assets/svg/ui-info-icon-dol.svg"
+        }
+    },
+    "files": [
+        {
+            "id": 1,
+            "label": "Shipped Demo",
+            "value": "./public/demo-01/index.html"
+        },
+        {
+            "id": 2,
+            "label": "Aaron Smyth",
+            "value": "https://aaronsmyth.co.uk"
+        }
+    ]
+}

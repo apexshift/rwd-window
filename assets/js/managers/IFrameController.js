@@ -1,6 +1,5 @@
 import { bus } from '../core/EventBus.js';
 import { state } from '../core/AppState.js';
-import LocalLoader from './LocalLoader.js';  // default import for your singleton
 
 /**
  * IFrameController - Singleton
@@ -26,16 +25,15 @@ export class IFrameController {
   // ==================== DOM REFERENCES ====================
   #elements = {
     app_window: null,
-    viewport: null,
-    iframe: null,
-    feedback: null,
-    widthInput: null,
-    heightInput: null,
-    resetBtn: null,
     fitBtn: null,
     deviceButtons: null,
-    resizeHandles: { left: null, right: null, bottom: null },
+    widthInput: null,
+    heightInput: null,
     fileSelector: null,
+    feedback: null,
+    viewport: null,
+    iframe: null,
+    resizeHandles: { left: null, right: null, bottom: null },
   };
 
   #isDragging = false;
@@ -88,14 +86,13 @@ export class IFrameController {
     this.#elements.feedback = document.querySelector('.app__masthead-feedback');
     this.#elements.widthInput = document.getElementById('width-control');
     this.#elements.heightInput = document.getElementById('height-control');
-    this.#elements.resetBtn = document.querySelector('[data-mode="reset"]');
-    this.#elements.fitBtn = document.querySelector('[data-mode="fit"]');
+    this.#elements.fitBtn = document.querySelector('button[data-mode="fit"]');
     
     this.#elements.deviceButtons = document.querySelectorAll(
-      '.controls-group button[data-mode]:not([data-mode="fit"]):not([data-mode="reset"])'
+      '.controls-group button[data-mode]:not([data-mode="fit"])'
     );
 
-    this.#elements.fileSelector = document.querySelector('#file-loader');
+    this.#elements.fileSelector = document.querySelector('#loader');
 
     this.#elements.resizeHandles.left   = document.querySelector('.viewport__rs.left');
     this.#elements.resizeHandles.right  = document.querySelector('.viewport__rs.right');
@@ -383,4 +380,4 @@ export class IFrameController {
 }
 
 // Backward compatibility export
-export default IFrameController.getInstance();
+export default IFrameController;

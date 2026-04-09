@@ -8,7 +8,7 @@
  * @since 0.1.0-beta
  */
 
-import breakpointsConfig from "../../../config/breakpoints.json" with { type: "json" };
+import config from "../../../config.json" with { type: "json" };
 import { bus } from '../core/EventBus.js';
 import { state } from '../core/AppState.js';
 import { UIFactory } from '../core/UIFactory.js';
@@ -33,7 +33,7 @@ export class BreakpointManager {
 
     #loadBreakpoints() {
         try {
-            const raw = breakpointsConfig.breakpoints || [];
+            const raw = config.ui_controls.breakpoints || [];
             this.#breakpoints = raw.map(bp => ({
                 label: bp.label,
                 minWidth: Number(bp.minWidth ?? bp['min-width']),
@@ -59,8 +59,8 @@ export class BreakpointManager {
         this.#buttonContainer = document.querySelector('.controls-group#devices');
         if (!this.#buttonContainer) return;
 
-        this.#breakpoints.forEach(bp => {
-            const button = UIFactory.createDeviceButton(bp);
+        this.#breakpoints.forEach((bp, index) => {
+            const button = UIFactory.createDeviceButton(bp, index);
             button.addEventListener('click', (e) => this.#handleBreakpointClick(button, bp, e));
             button.addEventListener('dblclick', (e) => { e.stopImmediatePropagation(); this.#resetToFit(); });
             this.#buttonContainer.appendChild(button);
@@ -102,4 +102,4 @@ export class BreakpointManager {
     getBreakpoints() { return [...this.#breakpoints]; }
 }
 
-export default BreakpointManager.getInstance();
+export default BreakpointManager;

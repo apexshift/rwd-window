@@ -1,4 +1,4 @@
-import loader_config from "../../../config/file-loader.json" with { type: "json" };
+import config from "../../../config.json" with { type: "json" };
 import { bus } from '../core/EventBus.js';
 import { state } from '../core/AppState.js';
 
@@ -20,17 +20,17 @@ export class LocalLoader {
 
     #files;
 
-    constructor(config = {}) {
+    constructor() {
         if (instance) {
             throw new Error('LocalLoader is a singleton. Use LocalLoader.getInstance() instead.');
         }
 
-        if (!loader_config.files?.length) {
+        if (!config.files?.length) {
             throw new Error('File loader config is missing or empty.');
         }
 
         this.#defaults = { ...this.#defaults, ...config };
-        this.#files = loader_config.files;
+        this.#files = config.files;
 
         // Subscribe to state changes (for future persistence / reset)
         bus.on('state:currentDemoChanged', ({ value }) => {
@@ -110,4 +110,4 @@ export class LocalLoader {
 }
 
 // Keep backward compatibility for your existing code
-export default LocalLoader.getInstance();
+export default LocalLoader;

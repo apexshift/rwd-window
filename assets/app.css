@@ -88,6 +88,11 @@
     outline: 1px solid var(--theme-highlight);
     outline-offset: 0;
   }
+
+  img {
+    width: 100%;
+    aspect-ratio: 1;
+  }
 }
 
 .ui-button.active {
@@ -117,7 +122,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--theme-dark);
     width: var(--space-32);
     aspect-ratio: 1;
     font-size: var(--text-sm);
