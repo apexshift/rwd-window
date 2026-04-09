@@ -16,22 +16,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [unreleased]
 
 ### Added
-- Keyboard shortcuts (arrows for resize, 1-9 for breakpoints with toggle, F/R for Fit, Esc to clear mode, Tab/Shift+Tab to cycle, H to toggle height clamp)
-- UIManager as single source of truth for UI creation and element references
-- Shortcut tooltips on all UI buttons (Style A: "Mobile Portrait (1)", "Fit to Container (F / R)", "Keyboard Shortcuts (?)")
-- Pure EventBus wiring for help button
-- Cleaner App.js orchestrator with reduced duplication
+- **UIManager** as the single source of truth for all UI element creation and references
+- **Advanced Input Controls**: ± increment buttons for width and height with support for normal click (1px), Shift+click (10px), and Ctrl+click (50px)
+- Arrow key support (`↑`/`↓`) inside the width and height input fields (with same step modifiers)
+- Shortcut tooltips on all UI buttons (Style A: e.g. "Mobile Portrait (1)", "Fit to Container (F / R)", "Keyboard Shortcuts (?)")
+- Pure EventBus wiring for the help button (`ui:helpClicked`)
+- `Tab` / `Shift+Tab` to cycle through breakpoints
+- `H` shortcut to toggle between min and max height clamping
+- Centralized input event handling (`input:stepChanged`, `input:stepCommit`)
 
 ### Changed
-- UI creation centralized in UIManager
-- Managers now request UI elements from UIManager instead of direct DOM queries
-- Double-click behavior on device buttons preserved (only resize handles trigger Fit)
-- Config loading simplified to single config.json
+- `App.js` simplified to a lightweight orchestrator (removed manual UI creation logic)
+- All managers now request UI elements from `UIManager` instead of direct DOM queries
+- Improved input field synchronization so numeric values always reflect the current viewport state
+- Keyboard shortcuts now fully mirror mouse behavior for 1–9 (first press = Max, second press = Min)
 
 ### Fixed
-- Help button now reliably opens keyboard shortcuts modal
-- Reduced UI creation duplication between App.js and managers
-- Improved consistency in button creation and tooltip handling
+- Help button now reliably opens the keyboard shortcuts modal
+- Reduced UI creation duplication between `App.js` and managers
+- Input fields no longer revert to previous values after external changes (buttons, keyboard, etc.)
+
+### Notes
+- Double-click on device buttons behavior preserved (only resize handles trigger Fit to Container)
+- Project structure remains clean with `core/`, `managers/`, and single `config.json`
+
 
 ## [0.1.0-beta] - 2026-04-07
 
