@@ -126,7 +126,7 @@
     @container demo (width <= 810px) {
       grid-column: 1 / -1;
       margin-top: var(--space-2xl);
-      aspect-ratio: 5/3;
+      aspect-ratio: 1;
     }
   }
 }

@@ -103,7 +103,17 @@ The application uses a lightweight EventBus for decoupled communication between 
 This event system keeps the managers loosely coupled and makes the codebase easier to extend.
 
 ## Roadmap
-- Orientation toggle
+- Orientation toggle (`in progress`)
+  - Restricted to mobile and tablet breakpoints, but config driven
+- Code Houskeeping and Cleanup (`up next`)
 - Configurable clamping limits UI
+- Visual Overlays UI
+  - Container Identification, including
+    - the container name
+    - the container type
+    - the container dimensions
+  - Grid identification
+  - Outline mode
+  - X-ray mode (probably a css filter??).
 - LocalStorage persistence
 - Export current viewport state
