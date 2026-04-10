@@ -15,11 +15,23 @@ export class UIManager
         fileSelect: null,
         deviceContainer: null,
         masthead: null,
+        feedback: null,
+        appWindow: null,
+        viewport: null,
+        iFrame: null,
+        resizeHandles: {
+            left: null,
+            right: null,
+            bottoms: null
+        }
     }
 
     constructor() {
         if(instance) throw new Error('UIManager is a singleton, use UIManager.getInstance()');
+
         this.#createUI();
+        this.#collectElements();
+
         instance = this;
     }
 
@@ -70,6 +82,10 @@ export class UIManager
         );
         helpContainer.appendChild(this.#elements.helpBtn);
         this.#elements.masthead.appendChild(helpContainer);
+    }
+
+    #collectElements() {
+        this.#elements.fitBtn = document.querySelector('[data-mode="fit"]');
 
         this.#setupInputListeners();
     }
@@ -127,6 +143,14 @@ export class UIManager
     get fileSelect() { return this.#elements.fileSelect }
     get helpBtn() { return this.#elements.helpBtn }
     get Elements() { return this.#elements; }
+
+    getWidthInput() {
+        return this.widthInput.querySelector('input');
+    }
+
+    getHeightInput() {
+        return this.heightInput.querySelector('input');
+    }
 
     // TODO: refresh method, if needed later.
     refresh() {

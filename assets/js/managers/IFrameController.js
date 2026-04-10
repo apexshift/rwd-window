@@ -25,26 +25,19 @@ export class IFrameController {
   };
 
   // ==================== DOM REFERENCES ====================
-  #elements = {
-    app_window: null,
-    fitBtn: null,
-    deviceButtons: null,
-    widthInput: null,
-    heightInput: null,
-    fileSelector: null,
-    feedback: null,
-    viewport: null,
-    iframe: null,
-    resizeHandles: { left: null, right: null, bottom: null },
-  };
+  #elements = {};
 
   #isDragging = false;
+
+  #UI = null;
 
   // ==================== PRIVATE CONSTRUCTOR ====================
   constructor() {
     if (instance) {
       throw new Error('IFrameController is a singleton. Use IFrameController.getInstance() instead.');
     }
+
+    this.#UI = UIManager.getInstance();
 
     this.#collectElements();
     this.#setupEventListeners();
@@ -82,15 +75,20 @@ export class IFrameController {
 
   // ==================== DOM COLLECTION ====================
   #collectElements() {
-    const UI = UIManager.getInstance();
+
+    console.log(this.#UI.Elements);
+
+    this.#elements = { ...this.#elements, ...this.#UI.Elements };
+
+    /* const UI = UIManager.getInstance();
     this.#elements.app_window = document.querySelector('.app__window__view');
     this.#elements.viewport = document.querySelector('.viewport');
     this.#elements.iframe = document.getElementById('viewport-target');
     this.#elements.feedback = document.querySelector('.app__masthead-feedback');
 
 
-    this.#elements.widthInput = UI.widthInput.querySelector('input');
-    this.#elements.heightInput = UI.heightInput.querySelector('input');
+    this.#elements.widthInput = UI.getWidthInput();
+    this.#elements.heightInput = UI.getHeightInput();
     this.#elements.fitBtn = UI.fitBtn;
     
     this.#elements.deviceButtons = document.querySelectorAll(
@@ -102,6 +100,7 @@ export class IFrameController {
     this.#elements.resizeHandles.left   = document.querySelector('.viewport__rs.left');
     this.#elements.resizeHandles.right  = document.querySelector('.viewport__rs.right');
     this.#elements.resizeHandles.bottom = document.querySelector('.viewport__rs.bottom');
+    */
 
     if (!this.#elements.app_window || !this.#elements.viewport || !this.#elements.iframe) {
       throw new Error('Critical elements missing: app_window_view or viewport or iframe');
@@ -411,6 +410,15 @@ export class IFrameController {
       mode: state.getMode(),
       // isMinMode will come from breakpoint logic in Stage 1
     };
+  }
+
+  /**
+   * Methods used solely by the tests
+   */
+  static resetForTesting() {
+    if (import.meta.env?.TEST || process.env.MODE_ENV === 'test') {
+        instance = null;
+    }
   }
 }
 

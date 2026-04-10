@@ -28,7 +28,7 @@ export class BreakpointManager {
     }
 
     static getInstance() {
-        if (!instance) instance = new BreakpointManager();
+        if (!instance) instance = new BreakpointManager([]);
         return instance;
     }
 
@@ -104,6 +104,24 @@ export class BreakpointManager {
     }
 
     getBreakpoints() { return [...this.#breakpoints]; }
+
+    static resetForTesting() {
+        if (import.meta.env?.TEST || process.env.MODE_ENV === 'test') {
+            instance = null;
+        }
+    }
+
+    // Expose private methods for testing
+    static _test() {
+        if (!instance) {
+            instance = new BreakpointManager([]); // Initialize with an empty array or mock breakpoints
+        }
+        return {
+            resetToFit: instance.#resetToFit.bind(instance),
+            syncActiveButtonVisuals: instance.#syncActiveButtonVisuals.bind(instance),
+            handleBreakpointClick: instance.#handleBreakpointClick.bind(instance)
+        };
+    }
 }
 
 export default BreakpointManager;
