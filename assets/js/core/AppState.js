@@ -25,10 +25,17 @@ export class AppState {
   }
 
   clampWidth(width) {
-    return Math.max(this.#clamping.minWidth, Math.min(this.#clamping.maxWidth, Math.floor(width || 0)));
+    if(typeof width !== "number") {
+      width = this.#clamping.minWidth;
+    }
+
+    return Math.max(this.#clamping.minWidth || 320, Math.min(this.#clamping.maxWidth || 1920, Math.floor(width || 0)));
   }
 
   clampHeight(height) {
+    if(typeof height !== "number") {
+      height = this.#clamping.minHeight;
+    }
     return Math.max(this.#clamping.minHeight, Math.min(this.#clamping.maxHeight, Math.floor(height || 0)));
   }
 

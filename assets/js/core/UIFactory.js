@@ -26,7 +26,7 @@ export class UIFactory {
     return container;
   }
 
-  static #createButton(label, icon = "") {
+  static createButton(label, icon = "") {
     const button = document.createElement('button');
     button.className = 'ui-button';
 
@@ -56,7 +56,7 @@ export class UIFactory {
   }
 
   static createDeviceButton(breakpoint, index) {
-    const button = this.#createButton(breakpoint.label, breakpoint.icon);
+    const button = this.createButton(breakpoint.label, breakpoint.icon);
     button.title = `${breakpoint.label} (${index+1})`;
     button.dataset.mode = breakpoint.label || breakpoint.mode;
     button.dataset.minWidth = breakpoint.minWidth;
@@ -66,7 +66,7 @@ export class UIFactory {
   }
 
   static createFitToContainerButton(label, icon = "") {
-    const button = this.#createButton(label, icon);
+    const button = this.createButton(label, icon);
     button.classList.add('active');
     button.title = "Fit to Container (F)";
     button.dataset.mode = "fit";
@@ -76,7 +76,7 @@ export class UIFactory {
   }
 
   static createHelpButton(label, icon = "") {
-    const button = this.#createButton(label, icon);
+    const button = this.createButton(label, icon);
     button.id = "keyboard-help-btn";
     button.title = 'Keyboard Shortcuts (?)';
     button.dataset.action = 'show-help';

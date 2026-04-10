@@ -43,6 +43,12 @@ export class EventBus {
         }
       }
     }
+
+    resetForTesting() {
+      if (import.meta.env?.TEST || process.env.NODE_ENV === 'test') {
+        this.#listeners.clear();
+      }
+    }
   }
   
   // Export singleton instance for easy import
