@@ -1,5 +1,4 @@
 import { bus } from '../core/EventBus.js';
-import { state } from '../core/AppState.js';
 import { UIFactory } from '../core/UIFactory.js';
 import config from '../../../config.json' with { type: "json" };
 
@@ -137,7 +136,6 @@ export class UIManager {
         this.#addElement('loaderContainer', '#loader');
         this.#addElement('fileSelect', '#file-loader');      // assuming this ID
         this.#addElement('helpBtn', null, false); // created directly in #createUI
-        this.#addElement('feedback', '.app__masthead-feedback');
 
         // Nested / derived elements
         this.#addElement('appWindow', '.app__window__view');        // adjust selector as needed
@@ -221,7 +219,7 @@ export class UIManager {
         });
 
         // Keyboard handling
-        const handleKeydown = (input, isWidth) => (e) => {
+        const handleKeydown = (isWidth) => (e) => {
             if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                 const step = e.shiftKey ? 10 : ((e.ctrlKey || e.metaKey) ? 50 : 1);
                 const direction = e.key === 'ArrowUp' ? 1 : -1;
@@ -237,11 +235,19 @@ export class UIManager {
             }
         };
 
-        this.widthInput?.addEventListener('keydown', handleKeydown(this.widthInput, true));
+        this.widthInput?.addEventListener('keydown', handleKeydown(true));
         this.widthInput?.addEventListener('blur', () => bus.emit('input:stepCommit', { target: 'width' }));
 
-        this.heightInput?.addEventListener('keydown', handleKeydown(this.heightInput, false));
+        this.heightInput?.addEventListener('keydown', handleKeydown(false));
         this.heightInput?.addEventListener('blur', () => bus.emit('input:stepCommit', { target: 'height' }));
+
+        // Keep inputs max in sync with live container dimensions
+        bus.on('state:containerWidthChanged', ({ maxWidth }) => {
+            if (this.widthInput) this.widthInput.max = maxWidth;
+        });
+        bus.on('state:containerHeightChanged', ({ maxHeight }) => {
+            if (this.heightInput) this.heightInput.max = maxHeight;
+        });
 
         bus.emit("ui:setupEventListenersComplete", {});
     }

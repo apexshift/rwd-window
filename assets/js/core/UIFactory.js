@@ -114,7 +114,7 @@ export class UIFactory {
     input.id = inputId;
     input.className = "app__control-input";
     input.setAttribute("min", isWidth ? config.app.clamping.minWidth : config.app.clamping.minHeight);
-    input.setAttribute("max", isWidth ? config.app.clamping.maxWidth : config.app.clamping.maxHeight);
+    if (isWidth) input.setAttribute("max", config.app.clamping.maxWidth);
     input.setAttribute("value", isWidth ? config.app.clamping.maxWidth : config.app.clamping.maxHeight);
     input.setAttribute("placeholder", "-");
     wrapper.appendChild(input);

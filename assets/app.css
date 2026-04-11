@@ -24,37 +24,19 @@
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: var(--space-16);
   padding-bottom: var(--space-8);
 }
 
 .app__masthead-ident {
-  position: absolute;
   line-height: 1;
-  left: 0;
-  bottom: 50%;
-  transform: translateY(50%);
 }
 
 .masthead__controls {
   display: flex;
   align-items: center;
   gap: calc(var(--space-4) * .5);
-}
-
-.app__masthead-feedback {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  transform: translateY(-50%);
-  background-color: var(--theme-active);
-  color: var(--theme-dark);
-  padding: var(--space-4) var(--space-8);
-  border-radius: var(--space-4);
-  text-transform: capitalize;
-  cursor: default;
-  pointer-events: none;
 }
 
 .controls-group {

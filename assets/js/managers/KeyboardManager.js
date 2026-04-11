@@ -12,6 +12,7 @@
 import { bus } from '../core/EventBus.js';
 import { state } from '../core/AppState.js';
 import BreakpointManager from './BreakpointManager.js';
+import { showToast } from '../Utils.js';
 
 let instance = null;
 
@@ -164,7 +165,7 @@ export class KeyboardManager {
             : clamping.minHeight;
 
         state.updateViewport(current.width, newHeight);
-        console.log(`Keyboard: Height clamped to ${newHeight}px`);
+        showToast(`Height: ${newHeight}px`, { type: 'info' });
     }
 
     #toggleHelpOverlay() {

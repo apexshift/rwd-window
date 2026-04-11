@@ -3,11 +3,14 @@
  * Single flexible toast function to avoid DRY violations.
  */
 
+let _activeToast = null;
+let _activeToastTimer = null;
+
 export function showToast(message, options = {}) {
     const {
       type = 'error',           // 'error', 'success', 'info'
       duration = 3000,
-      position = 'top-right'
+      position = 'center'
     } = options;
   
     const colors = {
@@ -19,7 +22,7 @@ export function showToast(message, options = {}) {
     const toast = document.createElement('div');
     toast.style.cssText = `
       position: fixed;
-      ${position === 'top-right' ? 'top: 20px; right: 20px;' : 'bottom: 20px; left: 20px;'}
+      ${position === 'center' ? 'top: 50%; left: 50%; transform: translate(-50%, -50%);' : 'bottom: var(--space-32, 32px); right: var(--space-32, 32px);'}
       background: ${colors[type] || colors.error};
       color: white;
       padding: 12px 16px;
@@ -33,12 +36,23 @@ export function showToast(message, options = {}) {
       pointer-events: none;
     `;
   
+    // Dismiss any active toast immediately
+    if (_activeToast) {
+      clearTimeout(_activeToastTimer);
+      _activeToast.remove();
+      _activeToast = null;
+    }
+
     toast.textContent = message;
     document.body.appendChild(toast);
-  
-    setTimeout(() => {
+    _activeToast = toast;
+
+    _activeToastTimer = setTimeout(() => {
       toast.style.opacity = '0';
-      setTimeout(() => toast.remove(), 400);
+      setTimeout(() => {
+        toast.remove();
+        if (_activeToast === toast) _activeToast = null;
+      }, 400);
     }, duration);
   }
   

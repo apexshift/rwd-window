@@ -2,6 +2,7 @@ import config from '../../../config.json' with { type: "json" };
 import { bus } from '../core/EventBus.js';
 import { state } from '../core/AppState.js';
 import UIManager from './UIManager.js';
+import { showToast } from '../Utils.js';
 
 /**
  * IFrameController - Singleton
@@ -14,7 +15,7 @@ export class IFrameController {
     MAX_WIDTH = 1920;
     MIN_HEIGHT = 640;
     MAX_HEIGHT = 1080;
-    
+
     // ==================== PRIVATE FIELDS ====================
     #defaults = {
         minWidth: config.app.clamping.minWidth || this.MIN_WIDTH,
@@ -38,10 +39,10 @@ export class IFrameController {
 
         // Setup subscriptions early for state reactivity
         this.#setupStateSubscriptions();
-        
+
         // Listen for app manager initialization
         bus.on('app:managers:init', () => this.#initializeManager());
-        
+
         // Listen for app ready to initialize from state
         bus.on('app:ready', () => this.#initializeFromState());
     }
@@ -51,15 +52,13 @@ export class IFrameController {
         return instance;
     }
 
-    // ==================== PRIVATE METHODS (All declared here) ====================
+    // ==================== PRIVATE METHODS ====================
 
     #initializeManager() {
-        // Get UIManager instance now that UI is ready
         this.UIManager = UIManager.getInstance();
 
         // Cache element references from UIManager
-        this.#elements.iframe    = this.UIManager.iFrame;
-        this.#elements.feedback  = this.UIManager.feedback;
+        this.#elements.iframe = this.UIManager.iFrame;
 
         // Load defaults from config
         this.#defaults = {
@@ -69,31 +68,24 @@ export class IFrameController {
             maxHeight: config.app.clamping.maxHeight || this.MAX_HEIGHT,
         };
 
-        // Setup event listeners for user interactions  
         this.#setupEventListeners();
-        
+
         bus.emit('iframeController:ready', {});
     }
 
     #setupStateSubscriptions() {
-        // Central state subscriptions for reactive updates
         bus.on('state:viewportChanged', ({ value }) => this.#applyViewportFromState(value));
-        bus.on('state:modeChanged', ({ value }) => this.#applyModeFromState(value));
         bus.on('state:activeBreakpointChanged', ({ value }) => this.#applyBreakpointFromState(value));
 
-        // Handle breakpoint activation
+        // Breakpoint activated — update viewport width, toast the label
         bus.on('breakpoint:activated', (payload) => {
             const { targetWidth } = payload || {};
             if (typeof targetWidth !== 'number' || isNaN(targetWidth)) return;
-
-            const currentHeight = state.getViewport().height;
-            state.updateViewport(targetWidth, currentHeight);
-            this.#updateFeedback();
+            state.updateViewport(targetWidth, state.getViewport().height);
         });
 
-        // Handle user input events
         bus.on('viewport:fit', () => { this.#fitToContainer(); });
-        bus.on('input:stepChanged', ({ target, direction, step }) => {  
+        bus.on('input:stepChanged', ({ target, direction, step }) => {
             this.#handleInputStepChanged(target, direction, step);
         });
         bus.on('input:stepCommit', ({ target }) => this.#handleInputStepCommit(target));
@@ -105,9 +97,9 @@ export class IFrameController {
             return;
         }
 
-        // Always start by fitting to the real available space rather than applying
-        // any previously stored (potentially stale) dimensions from state.
-        this.#fitToContainer();
+        // Always start by fitting to the real available space. Silent — the
+        // "RWD window is ready" toast already confirms startup.
+        this.#fitToContainer({ silent: true });
     }
 
     #applyViewportFromState(viewport) {
@@ -118,12 +110,6 @@ export class IFrameController {
 
         if (this.UIManager.widthInput) this.UIManager.widthInput.value = viewport.width;
         if (this.UIManager.heightInput) this.UIManager.heightInput.value = viewport.height;
-
-        this.#updateFeedback();
-    }
-
-    #applyModeFromState() {
-        this.#updateFeedback();
     }
 
     #applyBreakpointFromState(breakpointData) {
@@ -143,7 +129,10 @@ export class IFrameController {
 
         const currentHeight = state.getViewport().height || this.#defaults.minHeight;
         state.updateViewport(finalWidth, currentHeight);
-        this.#updateFeedback();
+
+        const label = breakpointData.label ?? breakpoint?.label;
+        const suffix = isMinMode ? ' (Min)' : '';
+        if (label) showToast(`${label}${suffix}`, { type: 'info', duration: 1200 });
     }
 
     #debounce(fn, delay = 120) {
@@ -169,28 +158,18 @@ export class IFrameController {
             state.setMode('manual');
             if (state.getActiveBreakpoint()) state.setActiveBreakpoint(null);
         }
-
-        this.#updateFeedback();
     }
 
-    #updateFeedback() {
-        if (!this.#elements.feedback) return;
-
-        const mode = state.getMode();
-        const activeBp = state.getActiveBreakpoint();
-        const text = mode === 'fit'
-            ? 'Fit to Container'
-            : (activeBp ? `${activeBp.label}${activeBp.isMinMode ? ' (Min)' : ''}` : 'Custom');
-
-        this.#elements.feedback.textContent = text;
-    }
-
-    #fitToContainer() {
+    #fitToContainer({ silent = false } = {}) {
         if (!this.UIManager?.appWindow) return;
 
         const rect = this.UIManager.appWindow.getBoundingClientRect();
         const width = Math.floor(rect.width);
         const height = Math.floor(rect.height);
+
+        // Keep clamp ceilings in sync with the real available space.
+        state.setContainerWidth(width);
+        state.setContainerHeight(height);
 
         state.setMode('fit');
         state.setActiveBreakpoint(null);
@@ -199,7 +178,7 @@ export class IFrameController {
         this.#clearAllDeviceActiveStates();
         if (this.UIManager?.fitBtn) this.UIManager.fitBtn.classList.add('active');
 
-        this.#updateFeedback();
+        if (!silent) showToast('Fit to Container', { type: 'info', duration: 1200 });
     }
 
     #clearAllDeviceActiveStates() {
@@ -250,9 +229,9 @@ export class IFrameController {
         // Resize handles
         this.#setupResizeHandles();
 
-        // Window resize
+        // Window resize — silent, not a user-initiated fit
         window.addEventListener('resize', this.#debounce(() => {
-            if (state.getMode() === 'fit') this.#fitToContainer();
+            if (state.getMode() === 'fit') this.#fitToContainer({ silent: true });
         }));
     }
 

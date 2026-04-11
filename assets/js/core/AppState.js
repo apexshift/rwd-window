@@ -24,6 +24,20 @@ export class AppState {
     return { ...this.#clamping };
   }
 
+  setContainerWidth(width) {
+    const clamped = Math.floor(width);
+    if (this.#clamping.maxWidth === clamped) return;
+    this.#clamping.maxWidth = clamped;
+    bus.emit('state:containerWidthChanged', { maxWidth: clamped });
+  }
+
+  setContainerHeight(height) {
+    const clamped = Math.floor(height);
+    if (this.#clamping.maxHeight === clamped) return;
+    this.#clamping.maxHeight = clamped;
+    bus.emit('state:containerHeightChanged', { maxHeight: clamped });
+  }
+
   clampWidth(width) {
     if(typeof width !== "number") {
       width = this.#clamping.minWidth;
