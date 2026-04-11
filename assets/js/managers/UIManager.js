@@ -1,104 +1,212 @@
 import { bus } from '../core/EventBus.js';
 import { state } from '../core/AppState.js';
 import { UIFactory } from '../core/UIFactory.js';
-import config from '../../../config.json' with {type: "json"}
+import config from '../../../config.json' with { type: "json" };
 
 let instance = null;
 
-export class UIManager 
-{
-    #elements = {
-        fitBtn: null,
-        helpBtn: null,
-        widthInput: null,
-        heightInput: null,
-        fileSelect: null,
-        deviceContainer: null,
-        masthead: null,
-        feedback: null,
-        appWindow: null,
-        viewport: null,
-        iFrame: null,
-        resizeHandles: {
-            left: null,
-            right: null,
-            bottoms: null
-        }
-    }
+export class UIManager {
+    // Private storage for all managed DOM elements
+    #elements = {};
 
     constructor() {
-        if(instance) throw new Error('UIManager is a singleton, use UIManager.getInstance()');
-
-        this.#createUI();
-        this.#collectElements();
+        if (instance) {
+            throw new Error('UIManager is a singleton, use UIManager.getInstance()');
+        }
 
         instance = this;
+
+        // Listen for app initialization signal
+        bus.on('app:init', () => this.#initialize());
     }
 
     static getInstance() {
-        if(!instance) instance = new UIManager();
+        if (!instance) instance = new UIManager();
         return instance;
     }
 
+    /**
+     * Initialize UI when app:init event is received
+     * @private
+     */
+    #initialize() {
+        try {
+            bus.emit("ui:init", {});
+
+            this.#createUI();
+            this.#registerElements();
+            this.#setupEventListeners();
+            
+            bus.emit("ui:ready", {});
+        } catch (err) {
+            console.error('UIManager initialization failed:', err);
+            bus.emit('ui:error', { message: err.message, error: err });
+        }
+    }
+
+    /**
+     * Internal safe DOM query
+     */
+    #get(selector) {
+        if (typeof selector !== "string") {
+            throw new TypeError(`UIManager.#get(): selector must be a string, got ${typeof selector}`);
+        }
+        return document.querySelector(selector);
+    }
+
+    /**
+     * Register an element with automatic getter + setter
+     */
+    #addElement(name, selector, warnIfMissing = true) {
+        bus.emit('ui:addElement', {name, selector, warnIfMissing});
+        Object.defineProperty(this, name, {
+            get: () => this.#elements[name],
+            set: (newSelector) => {
+                const element = this.#get(newSelector);
+
+                if (!element && warnIfMissing) {
+                    console.warn(`UIManager: Element "${name}" not found for selector "${newSelector}"`);
+                }
+
+                this.#elements[name] = element;
+            },
+            enumerable: true,
+            configurable: false
+        });
+
+        // Set initial value if selector provided
+        if (selector !== undefined && selector !== null) {
+            this[name] = selector;
+        }
+        bus.emit('ui:addElementComplete', {name, selector, warnIfMissing});
+    }
+
     #createUI() {
-        this.#elements.masthead = document.querySelector('.masthead__controls');
-        if(!this.#elements.masthead) {
-            console.warn('Masthead container not found.');
-            return;
+        bus.emit('ui:createUI', {});
+        // Masthead is critical - we throw if missing
+        const masthead = this.#get('.masthead__controls');
+        if (!masthead) {
+            throw new Error('UIManager: Cannot create UI Elements without div.masthead__controls.');
         }
 
-        // Fit button
+        // Create and append controls using UIFactory
         const fitContainer = UIFactory.createControlsContainer('fitContainer');
-        this.#elements.fitBtn = UIFactory.createFitToContainerButton(
+        const fitBtn = UIFactory.createFitToContainerButton(
             config.ui_controls.fitToContainer.label,
             config.ui_controls.fitToContainer.icon
         );
-        fitContainer.appendChild(this.#elements.fitBtn);
-        this.#elements.masthead.appendChild(fitContainer);
+        fitContainer.appendChild(fitBtn);
+        masthead.appendChild(fitContainer);
 
-        // Device buttons container
-        this.#elements.deviceContainer = UIFactory.createControlsContainer('devices');
-        this.#elements.masthead.appendChild(this.#elements.deviceContainer);
+        const deviceContainer = UIFactory.createControlsContainer('devices');
+        masthead.appendChild(deviceContainer);
 
-        // Dimensions
         const dimensionsContainer = UIFactory.createControlsContainer('dimensions');
-        this.#elements.widthInput = UIFactory.createControlWithIncrement('W', 'width-control', true);
-        this.#elements.heightInput = UIFactory.createControlWithIncrement('H', 'height-control', false);
-        dimensionsContainer.appendChild(this.#elements.widthInput);
-        dimensionsContainer.appendChild(this.#elements.heightInput);
-        this.#elements.masthead.appendChild(dimensionsContainer);
+        const widthInput = UIFactory.createControlWithIncrement('W', 'width-control', true);
+        const heightInput = UIFactory.createControlWithIncrement('H', 'height-control', false);
+        dimensionsContainer.appendChild(widthInput);
+        dimensionsContainer.appendChild(heightInput);
+        masthead.appendChild(dimensionsContainer);
 
-        // Loader
         const loaderContainer = UIFactory.createControlsContainer('loader');
-        this.#elements.fileSelect = UIFactory.createSelectControl('Load', 'file-loader');
-        loaderContainer.appendChild(this.#elements.fileSelect);
-        this.#elements.masthead.appendChild(loaderContainer);
+        const fileSelect = UIFactory.createSelectControl('Load', 'file-loader');
+        loaderContainer.appendChild(fileSelect);
+        masthead.appendChild(loaderContainer);
 
-        // Help
         const helpContainer = UIFactory.createControlsContainer('help');
-        this.#elements.helpBtn = UIFactory.createHelpButton(
+        const helpBtn = UIFactory.createHelpButton(
             config.ui_controls.help.label,
             config.ui_controls.help.icon
         );
-        helpContainer.appendChild(this.#elements.helpBtn);
-        this.#elements.masthead.appendChild(helpContainer);
+        helpContainer.appendChild(helpBtn);
+        masthead.appendChild(helpContainer);
+
+        // Store masthead immediately (critical element)
+        this.#elements.masthead = masthead;
+
+        bus.emit('ui:createUIComplete');
     }
 
-    #collectElements() {
-        this.#elements.fitBtn = document.querySelector('[data-mode="fit"]');
+    #registerElements() {
+        bus.emit("ui:registerElement", {});
+        // Register elements with automatic getters/setters
+        this.#addElement('masthead', null, false);           // already set in #createUI
+        this.#addElement('fitBtn', '[data-mode="fit"]');
+        this.#addElement('deviceContainer', '#devices');
+        this.#addElement('dimensionsContainer', '#dimensions');
+        this.#addElement('loaderContainer', '#loader');
+        this.#addElement('fileSelect', '#file-loader');      // assuming this ID
+        this.#addElement('helpBtn', null, false); // created directly in #createUI
+        this.#addElement('feedback', '.app__masthead-feedback');
 
-        this.#setupInputListeners();
+        // Nested / derived elements
+        this.#addElement('appWindow', '.app__window__view');        // adjust selector as needed
+        this.#addElement('viewport', '.viewport');
+        this.#addElement('iFrame', '.viewport__frame');
+
+        // Width & Height inputs - registered after dimensionsContainer exists
+        if (this.dimensionsContainer) {
+            this.#elements.widthInput = this.dimensionsContainer.querySelector('#width-control');
+            this.#elements.heightInput = this.dimensionsContainer.querySelector('#height-control');
+
+            // Define getters for widthInput and heightInput
+            Object.defineProperty(this, 'widthInput', {
+                get: () => this.#elements.widthInput,
+                enumerable: true
+            });
+
+            Object.defineProperty(this, 'heightInput', {
+                get: () => this.#elements.heightInput,
+                enumerable: true
+            });
+        } else {
+            console.warn('UIManager: dimensionsContainer not found - width/height inputs unavailable');
+        }
+
+        // Special derived getter: stepButtons
+        Object.defineProperty(this, 'stepButtons', {
+            get: () => Array.from(this.dimensionsContainer?.querySelectorAll('.app__control-increment') || []),
+            enumerable: true
+        });
+
+        // Special derived getter: resizeHandles
+        Object.defineProperty(this, 'resizeHandles', {
+            get: () => {
+                const resizeHandles = {
+                    left: this.viewport?.querySelector('.viewport__rs.left'),
+                    right: this.viewport?.querySelector('.viewport__rs.right'),
+                    bottom: this.viewport?.querySelector('.viewport__rs.bottom')
+                };
+
+                return resizeHandles;
+            },
+            enumerable: true
+        })
+
+        // Expose raw elements object if needed (read-only)
+        Object.defineProperty(this, 'Elements', {
+            get: () => ({ ...this.#elements }),
+            enumerable: true
+        });
+
+        bus.emit("ui:registerElementsComplete", {});
     }
 
-    #setupInputListeners() {
-        const widthInput = this.widthInput.querySelector('input');
-        const heightInput = this.heightInput.querySelector('input');
+    /**
+     * Setup input listeners (moved here for clarity)
+     * Call this after registration if needed
+     */
+    #setupEventListeners() {
+        bus.emit('ui:setupEventListeners', {});
+        this.fitBtn.addEventListener('click', () => bus.emit('viewport:fit'));
 
-        if(!widthInput || !heightInput) return;
+        if (!this.widthInput || !this.heightInput) {
+            console.warn('UIManager: width/height inputs not found for listener setup');
+            return;
+        }
 
         // Step buttons
-        const stepButtons = this.stepButtons;
-        stepButtons.forEach(btn => {
+        this.stepButtons.forEach(btn => {
             btn.addEventListener('click', e => {
                 const direction = btn.dataset.direction === 'up' ? 1 : -1;
                 const isWidth = btn.dataset.target === 'width';
@@ -112,49 +220,40 @@ export class UIManager
             });
         });
 
-        // Keyboard arrows inside inputs
-        const handleInputKeydown = (input, isWidth) => e => {
-            if(e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        // Keyboard handling
+        const handleKeydown = (input, isWidth) => (e) => {
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                 const step = e.shiftKey ? 10 : ((e.ctrlKey || e.metaKey) ? 50 : 1);
                 const direction = e.key === 'ArrowUp' ? 1 : -1;
+
                 bus.emit('input:stepChanged', {
                     target: isWidth ? 'width' : 'height',
                     direction,
                     step
                 });
                 e.preventDefault();
-            } else if(e.key === 'Enter') {
-                bus.emit('input:stepCommit', {target: isWidth ? 'width' : 'height' });
+            } else if (e.key === 'Enter') {
+                bus.emit('input:stepCommit', { target: isWidth ? 'width' : 'height' });
             }
-        }
+        };
 
-        widthInput.addEventListener('keydown', handleInputKeydown(widthInput, true));
-        widthInput.addEventListener('blur', () => bus.emit('input:stepCommit', { target: 'width' }));
-        heightInput.addEventListener('keydown', handleInputKeydown(heightInput, false));
-        heightInput.addEventListener('blur', () => bus.emit('input:stepCommit', { target: 'height' }));
+        this.widthInput?.addEventListener('keydown', handleKeydown(this.widthInput, true));
+        this.widthInput?.addEventListener('blur', () => bus.emit('input:stepCommit', { target: 'width' }));
+
+        this.heightInput?.addEventListener('keydown', handleKeydown(this.heightInput, false));
+        this.heightInput?.addEventListener('blur', () => bus.emit('input:stepCommit', { target: 'height' }));
+
+        bus.emit("ui:setupEventListenersComplete", {});
     }
 
-    get masthead() { return this.#elements.masthead }
-    get FitBtn() { return this.#elements.fitBtn }
-    get deviceContainer() { return this.#elements.deviceContainer }
-    get widthInput() { return this.#elements.widthInput }
-    get stepButtons() { return [...this.widthInput.querySelectorAll('.app__control-increment'), ...this.heightInput.querySelectorAll('.app__control-increment') ]; }
-    get heightInput() { return this.#elements.heightInput }
-    get fileSelect() { return this.#elements.fileSelect }
-    get helpBtn() { return this.#elements.helpBtn }
-    get Elements() { return this.#elements; }
-
-    getWidthInput() {
-        return this.widthInput.querySelector('input');
-    }
-
-    getHeightInput() {
-        return this.heightInput.querySelector('input');
-    }
-
-    // TODO: refresh method, if needed later.
+    // Placeholder for future dynamic refresh
     refresh() {
-        // can be used if dynamic changes are needed.
+        // Re-query critical elements if DOM changes dynamically
+        // this.masthead = '.masthead__controls'; // example
+    }
+
+    toString() {
+        console.info(this.#elements);
     }
 }
 

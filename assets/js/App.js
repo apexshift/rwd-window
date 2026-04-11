@@ -8,8 +8,6 @@
  */
 import { bus } from './core/EventBus.js';
 import { state } from './core/AppState.js';
-import config from '../../config.json' with {type: "json"};
-
 import LocalLoader from './managers/LocalLoader.js';
 import BreakpointManager from './managers/BreakpointManager.js';
 import KeyboardManager from './managers/KeyboardManager.js';
@@ -19,42 +17,84 @@ import UIManager from './managers/UIManager.js';
 import { showError, showSuccess } from './Utils.js';
 
 export class App {
-  async init() {
+  #managerStatus = {
+    ui: false,
+    breakpoints: false,
+    iframeController: false,
+    localLoader: false,
+    keyboard: false
+  };
+
+  init() {
     try {
-      // create UI first
-      const UI = UIManager.getInstance();
+      // === PHASE 1: Setup completion listeners ===
+      bus.on('ui:ready', () => this.#onUIReady());
+      bus.on('breakpoints:ready', () => this.#onManagerReady('breakpoints'));
+      bus.on('iframeController:ready', () => this.#onManagerReady('iframeController'));
+      bus.on('localLoader:ready', () => this.#onManagerReady('localLoader'));
+      bus.on('keyboardManager:ready', () => this.#onManagerReady('keyboard'));
 
-      // Instantiate all singletons
-      const localLoader = LocalLoader.getInstance();
-      const breakpointManager = BreakpointManager.getInstance();
-      const keyboardManager = KeyboardManager.getInstance();
-      const iframeController = IFrameController.getInstance();
+      // Handle errors
+      bus.on('config:error', ({ type, message }) => {
+        showError(`Configuration Error (${type}): ${message}`, { duration: 5000 });
+      });
+      bus.on('ui:error', ({ message }) => {
+        showError(`UI Error: ${message}`, { duration: 5000 });
+      });
 
-      // Initial state from config.json (with fallback)
-      const initialWidth = config.app.initialViewport?.width || 1920;
-      const initialHeight = config.app.initialViewport?.height || 1080;
+      // === PHASE 2: Instantiate singletons (they register themselves) ===
+      UIManager.getInstance();
+      BreakpointManager.getInstance();
+      KeyboardManager.getInstance();
+      LocalLoader.getInstance();
+      IFrameController.getInstance();
 
-      const loaderSelect = UI.fileSelect.querySelector('#file-loader');
-      if(loaderSelect) {
-        localLoader.populateSelect(loaderSelect);
-      }
-      
-      state.setCurrentDemo(loaderSelect?.value || '');
-      state.updateViewport(initialWidth, initialHeight);
-      state.setMode('fit');
-
-      // Signal that everything is ready → managers initialize (dynamic buttons, etc.)
-      bus.emit('app:ready');
-      showSuccess('RWD window is ready');
+      // === PHASE 3: Kick off initialization sequence ===
+      bus.emit('app:init', {});
     } catch (err) {
       console.error('App initialization failed:', err);
-      showError(`Failed to initialize RWD Window: ${err.message || 'Unknown error'}`, {duration: 5000});
+      showError(`Failed to initialize RWD Window: ${err.message || 'Unknown error'}`, { duration: 5000 });
       bus.emit('app:error', { message: 'Failed to initialize', error: err });
     }
+  }
 
-    // Global handler for config errors (from BreakpointManager, etc.)
-    bus.on('config:error', ({ type, message }) => {
-      showError(`Configuration Error (${type}): ${message}`, {duration: 5000});
-    });
+  #onUIReady() {
+    this.#managerStatus.ui = true;
+    console.log('[App] UI ready');
+    
+    // Once UI is ready, tell managers they can initialize
+    bus.emit('app:managers:init', {});
+  }
+
+  #onManagerReady(managerName) {
+    this.#managerStatus[managerName] = true;
+    console.log(`[App] ${managerName} ready`);
+
+    // Check if all managers are ready
+    if (this.#allManagersReady()) {
+      this.#activateApp();
+    }
+  }
+
+  #allManagersReady() {
+    return (
+      this.#managerStatus.ui &&
+      this.#managerStatus.breakpoints &&
+      this.#managerStatus.iframeController &&
+      this.#managerStatus.localLoader &&
+      this.#managerStatus.keyboard
+    );
+  }
+
+  #activateApp() {
+    console.log('[App] All systems ready, activating application');
+
+    // === PHASE 4: Set initial mode — IFrameController will measure the real container on app:ready ===
+    state.setMode('fit');
+
+    // === PHASE 5: Signal full readiness → managers do full initialization ===
+    bus.emit('app:ready', {});
+
+    showSuccess('RWD window is ready');
   }
 }

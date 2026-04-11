@@ -26,17 +26,18 @@ export class LocalLoader {
             throw new Error('LocalLoader is a singleton. Use LocalLoader.getInstance() instead.');
         }
 
-        if (!config.files?.length) {
-            throw new Error('File loader config is missing or empty.');
-        }
+        instance = this;
 
-        this.#defaults = { ...this.#defaults, ...config };
-        this.#files = config.files;
-
-        // Subscribe to state changes (for future persistence / reset)
+        // Setup state change subscription early
         bus.on('state:currentDemoChanged', ({ value }) => {
             this.#updateIframeFromDemo(value);
         });
+
+        // Listen for app manager initialization
+        bus.on('app:managers:init', () => this.#initializeManager());
+        
+        // Listen for UI ready to populate select
+        bus.on('ui:ready', () => this.#populateSelectIfReady());
     }
 
     static getInstance() {
@@ -44,6 +45,26 @@ export class LocalLoader {
             instance = new LocalLoader();
         }
         return instance;
+    }
+
+    #initializeManager() {
+        // Load files from config
+        if (!config.files?.length) {
+            console.error('File loader config is missing or empty.');
+            bus.emit('config:error', { type: 'files', message: 'No files configured' });
+            return;
+        }
+
+        this.#defaults = { ...this.#defaults, ...config };
+        this.#files = config.files;
+
+        bus.emit('localLoader:ready', {});
+    }
+
+    #populateSelectIfReady() {
+        // Only populate if manager is initialized
+        if (!this.#files?.length) return;
+        this.populateSelect();
     }
 
     getFiles() {
@@ -92,7 +113,7 @@ export class LocalLoader {
     }
 
     populateSelect() {
-        const selectEl = UIManager.getInstance().fileSelect.querySelector('#file-loader');
+        const selectEl = UIManager.getInstance().fileSelect;
         if(!selectEl) {
             console.warn('Demo select element not found via UIManager');
             return;
@@ -107,9 +128,16 @@ export class LocalLoader {
             selectEl.appendChild(option);
         });
 
-        // Set initial from state
+        // Restore from state, or auto-load first file (mirrors main branch initIFrameSrc behaviour)
         const current = state.getCurrentDemo();
-        if (current) selectEl.value = current;
+        if (current) {
+            selectEl.value = current;
+        } else if (this.#files.length > 0) {
+            const firstFile = this.#files[0];
+            selectEl.value = firstFile.value;
+            state.setCurrentDemo(firstFile.value);
+            bus.emit('demo:changed', { value: firstFile.value });
+        }
     }
 }
 

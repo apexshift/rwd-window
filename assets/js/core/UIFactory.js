@@ -19,7 +19,7 @@ export class UIFactory {
   static createControlsContainer(id = "") {
     // Helper if needed for future dynamic sections
     const container = document.createElement('fieldset');
-    if(typeof id === "string" && (id !== "" || id !== undefined )) {
+    if(typeof id === "string" && (id !== "" && id !== undefined )) {
       container.id = id;
     }
     container.className = 'controls-group';
@@ -35,10 +35,10 @@ export class UIFactory {
     }
 
     if(typeof label !== "string") {
-      throw new Error(`@parma[label] must be typeof string, got ${typeof label}`);
+      throw new Error(`@param[label] must be typeof string, got ${typeof label}`);
     }
 
-    if(icon !== "" || icon !== undefined) {
+    if(icon !== "" && icon !== undefined) {
       if(icon.startsWith('<svg')) {
         button.innerHTML = icon;
       } else {
@@ -70,7 +70,6 @@ export class UIFactory {
     button.classList.add('active');
     button.title = "Fit to Container (F)";
     button.dataset.mode = "fit";
-    button.addEventListener('click', e => { bus.emit('viewport:fit') });
 
     return button;
   }
@@ -134,7 +133,7 @@ export class UIFactory {
     label.setAttribute('for', inputId);
 
     const label_span = document.createElement('span');
-    label_span.classList = 'app__control-label loader';
+    label_span.className = 'app__control-label loader';
     label_span.textContent = labelText;
     label.appendChild(label_span);
 

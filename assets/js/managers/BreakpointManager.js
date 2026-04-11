@@ -22,9 +22,10 @@ export class BreakpointManager {
 
     constructor() {
         if (instance) throw new Error('BreakpointManager is a singleton.');
-        this.#loadBreakpoints();
-        this.#setupSubscriptions();
         instance = this;
+
+        // Setup event subscriptions early
+        this.#setupSubscriptions();
     }
 
     static getInstance() {
@@ -32,7 +33,27 @@ export class BreakpointManager {
         return instance;
     }
 
-    #loadBreakpoints() {
+    #setupSubscriptions() {
+        // Listen for app manager initialization signal
+        bus.on('app:managers:init', () => this.#loadAndInitialize());
+
+        // Listen for state changes to sync visuals
+        bus.on('state:activeBreakpointChanged', ({ value }) => this.#syncActiveButtonVisuals(value));
+
+        // Clear all device highlights when fit mode is entered (drag highlight may not trigger
+        // state:activeBreakpointChanged if activeBreakpoint was already null)
+        bus.on('state:modeChanged', ({ value }) => {
+            if (value === 'fit') this.#syncActiveButtonVisuals(null);
+        });
+
+        // Highlight the matching breakpoint range button during manual/drag resize
+        bus.on('state:viewportChanged', ({ value }) => this.#syncButtonVisualsForWidth(value.width));
+
+        // Listen for app ready to create UI
+        bus.on('app:ready', () => this.#initializeUI());
+    }
+
+    #loadAndInitialize() {
         try {
             const raw = config.ui_controls.breakpoints || [];
             this.#breakpoints = raw.map(bp => ({
@@ -41,17 +62,14 @@ export class BreakpointManager {
                 maxWidth: Number(bp.maxWidth ?? bp['max-width']),
                 icon: bp.icon
             })).filter(bp => bp.label && !isNaN(bp.minWidth) && !isNaN(bp.maxWidth));
+            
             bus.emit('breakpoints:loaded', { count: this.#breakpoints.length });
+            bus.emit('breakpoints:ready', {});
         } catch (err) {
             console.error('Breakpoint config load failed:', err);
             bus.emit('config:error', { type: 'breakpoints', message: err.message });
             this.#breakpoints = [];
         }
-    }
-
-    #setupSubscriptions() {
-        bus.on('app:ready', () => this.#initializeUI());
-        bus.on('state:activeBreakpointChanged', ({ value }) => this.#syncActiveButtonVisuals(value));
     }
 
     #initializeUI() {
@@ -65,13 +83,13 @@ export class BreakpointManager {
 
         this.#breakpoints.forEach((bp, index) => {
             const button = UIFactory.createDeviceButton(bp, index);
-            button.addEventListener('click', (e) => this.#handleBreakpointClick(button, bp, e));
+            button.addEventListener('click', (e) => this.#handleBreakpointClick(bp, e));
             button.addEventListener('dblclick', (e) => { e.stopImmediatePropagation(); this.#resetToFit(); });
             this.#buttonContainer.appendChild(button);
         });
     }
 
-    #handleBreakpointClick(button, breakpoint, event) {
+    #handleBreakpointClick(breakpoint, event) {
         if (event?.detail >= 2) {
             this.#resetToFit();
             return;
@@ -103,10 +121,17 @@ export class BreakpointManager {
         if (match) match.classList.add('active');
     }
 
+    #syncButtonVisualsForWidth(width) {
+        // Only show passive range hint in manual mode (drag / custom input)
+        if (state.getMode() !== 'manual') return;
+        const match = this.#breakpoints.find(bp => width >= bp.minWidth && width <= bp.maxWidth);
+        this.#syncActiveButtonVisuals(match || null);
+    }
+
     getBreakpoints() { return [...this.#breakpoints]; }
 
     static resetForTesting() {
-        if (import.meta.env?.TEST || process.env.MODE_ENV === 'test') {
+        if (import.meta.env?.TEST || process.env.NODE_ENV === 'test') {
             instance = null;
         }
     }

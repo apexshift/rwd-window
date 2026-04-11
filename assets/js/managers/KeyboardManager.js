@@ -22,14 +22,21 @@ export class KeyboardManager {
 
     constructor() {
         if (instance) throw new Error('KeyboardManager is a singleton.');
-        this.#setupListeners();
-        this.#setupEventBusListeners();
         instance = this;
+
+        // Listen for app manager initialization
+        bus.on('app:managers:init', () => this.#initializeManager());
     }
 
     static getInstance() {
         if (!instance) instance = new KeyboardManager();
         return instance;
+    }
+
+    #initializeManager() {
+        this.#setupListeners();
+        this.#setupEventBusListeners();
+        bus.emit('keyboardManager:ready', {});
     }
 
     #setupListeners() {
@@ -187,7 +194,7 @@ export class KeyboardManager {
                 <tr><td style="padding:4px 0;">1–9</td><td>Quick breakpoint (1st = Max, 2nd = Min)</td></tr>
                 <tr><td style="padding:4px 0;">Tab / Shift+Tab</td><td>Cycle through breakpoints</td></tr>
                 <tr><td style="padding:4px 0;">H</td><td>Toggle between min and max height clamp</td></tr>
-                <tr><td style="padding:4px 0;">F / R</td><td>Fit to Container</td></tr>
+                <tr><td style="padding:4px 0;">F</td><td>Fit to Container</td></tr>
                 <tr><td style="padding:4px 0;">Esc</td><td>Clear current mode</td></tr>
                 <tr><td style="padding:4px 0;">? / Shift+/</td><td>Show this help</td></tr>
             </table>
