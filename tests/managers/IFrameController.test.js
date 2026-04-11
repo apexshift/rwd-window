@@ -1,110 +1,131 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import IFrameController from '../../assets/js/managers/IFrameController.js';
 import { bus } from '../../assets/js/core/EventBus.js';
 import { state } from '../../assets/js/core/AppState.js';
 
 describe('IFrameController', () => {
-  let controller;
+    beforeEach(() => {
+        bus.resetForTesting();
+        IFrameController.resetForTesting();
+        // Set a known starting viewport so tests have a predictable baseline
+        state.updateViewport(1024, 768);
+        state.setMode('manual');
+        state.setActiveBreakpoint(null);
+    });
 
-  beforeEach(() => {
-    // Reset the singleton instance and mock the DOM
-    IFrameController.resetForTesting();
-    document.body.innerHTML = `
-      <div id="iframe-container">
-        <iframe id="test-iframe"></iframe>
-      </div>
-    `;
-    controller = IFrameController.getInstance();
-  });
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
 
-  /**
-   * @description Tests the singleton behavior of the IFrameController.
-   */
-  it('should return the same instance for multiple calls to getInstance', () => {
-    const instance1 = IFrameController.getInstance();
-    const instance2 = IFrameController.getInstance();
-    expect(instance1).toBe(instance2);
-  });
+    // ── singleton ─────────────────────────────────────────────────────────────
 
-  /**
-   * @description Tests the `state:viewportChanged` event listener.
-   */
-  it('should apply viewport changes when the `state:viewportChanged` event is emitted', () => {
-    const applyViewportSpy = vi.spyOn(controller, '#applyViewportFromState');
-    const newViewport = { width: 1024, height: 768 };
+    /**
+     * @description getInstance() should always return the same object.
+     */
+    it('is a singleton', () => {
+        const a = IFrameController.getInstance();
+        const b = IFrameController.getInstance();
+        expect(a).toBe(b);
+    });
 
-    bus.emit('state:viewportChanged', { value: newViewport });
-    expect(applyViewportSpy).toHaveBeenCalledWith(newViewport);
-  });
+    /**
+     * @description Constructing a second instance directly should throw.
+     */
+    it('throws when constructed directly after first instance', () => {
+        IFrameController.getInstance(); // prime the singleton
+        expect(() => new IFrameController()).toThrow('singleton');
+    });
 
-  /**
-   * @description Tests the `state:modeChanged` event listener.
-   */
-  it('should apply mode changes when the `state:modeChanged` event is emitted', () => {
-    const applyModeSpy = vi.spyOn(controller, '#applyModeFromState');
-    const newMode = 'fit';
+    // ── getCurrentSize ────────────────────────────────────────────────────────
 
-    bus.emit('state:modeChanged', { value: newMode });
-    expect(applyModeSpy).toHaveBeenCalledWith(newMode);
-  });
+    /**
+     * @description getCurrentSize should reflect the current AppState viewport.
+     */
+    it('getCurrentSize — returns width, height and mode from state', () => {
+        state.updateViewport(800, 600);
+        state.setMode('manual');
+        const size = IFrameController.getCurrentSize();
+        expect(size.width).toBe(state.clampWidth(800));
+        expect(size.height).toBe(state.clampHeight(600));
+        expect(size.mode).toBe('manual');
+    });
 
-  /**
-   * @description Tests the `state:activeBreakpointChanged` event listener.
-   */
-  it('should apply breakpoint changes when the `state:activeBreakpointChanged` event is emitted', () => {
-    const applyBreakpointSpy = vi.spyOn(controller, '#applyBreakpointFromState');
-    const newBreakpoint = { label: 'Mobile', minWidth: 320, maxWidth: 480 };
+    // ── breakpoint:activated ──────────────────────────────────────────────────
 
-    bus.emit('state:activeBreakpointChanged', { value: newBreakpoint });
-    expect(applyBreakpointSpy).toHaveBeenCalledWith(newBreakpoint);
-  });
+    /**
+     * @description Emitting breakpoint:activated with a valid targetWidth should
+     * update the viewport width in state.
+     */
+    it('breakpoint:activated — updates viewport width via state', () => {
+        IFrameController.getInstance(); // ensure subscriptions are registered
+        const spy = vi.spyOn(state, 'updateViewport');
 
-  /**
-   * @description Tests the `breakpoint:activated` event listener.
-   */
-  it('should update the viewport when a breakpoint is activated', () => {
-    const updateViewportSpy = vi.spyOn(state, 'updateViewport');
-    const updateFeedbackSpy = vi.spyOn(controller, '#updateFeedback');
-    const payload = {
-      breakpoint: { label: 'Mobile', minWidth: 320, maxWidth: 480 },
-      isMinMode: false,
-      targetWidth: 480,
-    };
+        bus.emit('breakpoint:activated', { targetWidth: 480 });
 
-    bus.emit('breakpoint:activated', payload);
-    expect(updateViewportSpy).toHaveBeenCalledWith(480, state.getViewport().height);
-    expect(updateFeedbackSpy).toHaveBeenCalled();
-  });
+        expect(spy).toHaveBeenCalledWith(480, expect.any(Number));
+    });
 
-  /**
-   * @description Tests the `viewport:fit` event listener.
-   */
-  it('should fit the iframe to the container when the `viewport:fit` event is emitted', () => {
-    const fitToContainerSpy = vi.spyOn(controller, '#fitToContainer');
+    /**
+     * @description breakpoint:activated with a non-numeric targetWidth should be ignored.
+     */
+    it('breakpoint:activated — ignores non-numeric targetWidth', () => {
+        IFrameController.getInstance();
+        const spy = vi.spyOn(state, 'updateViewport');
 
-    bus.emit('viewport:fit');
-    expect(fitToContainerSpy).toHaveBeenCalled();
-  });
+        bus.emit('breakpoint:activated', { targetWidth: 'bad' });
 
-  /**
-   * @description Tests the `input:stepChanged` event listener.
-   */
-  it('should handle input step changes when the `input:stepChanged` event is emitted', () => {
-    const handleInputStepChangedSpy = vi.spyOn(controller, '#handleInputStepChanged');
-    const payload = { target: 'width', direction: 'up', step: 10 };
+        expect(spy).not.toHaveBeenCalled();
+    });
 
-    bus.emit('input:stepChanged', payload);
-    expect(handleInputStepChangedSpy).toHaveBeenCalledWith('width', 'up', 10);
-  });
+    // ── input:stepChanged ─────────────────────────────────────────────────────
 
-  /**
-   * @description Tests the `input:stepCommit` event listener.
-   */
-  it('should handle input step commits when the `input:stepCommit` event is emitted', () => {
-    const handleInputStepCommitSpy = vi.spyOn(controller, '#handleInputStepCommit');
-    const payload = { target: 'width' };
+    /**
+     * @description input:stepChanged targeting width should nudge the viewport width.
+     */
+    it('input:stepChanged — width nudges state viewport width', () => {
+        IFrameController.getInstance();
+        state.updateViewport(800, 600);
+        const before = state.getViewport().width;
 
-    bus.emit('input:stepCommit', payload);
-    expect(handleInputStepCommitSpy).toHaveBeenCalledWith('width');
-  });
+        bus.emit('input:stepChanged', { target: 'width', direction: 1, step: 10 });
+
+        expect(state.getViewport().width).toBe(state.clampWidth(before + 10));
+    });
+
+    /**
+     * @description input:stepChanged targeting height should nudge the viewport height.
+     */
+    it('input:stepChanged — height nudges state viewport height', () => {
+        IFrameController.getInstance();
+        state.updateViewport(800, 700);
+        const before = state.getViewport().height;
+
+        bus.emit('input:stepChanged', { target: 'height', direction: -1, step: 5 });
+
+        expect(state.getViewport().height).toBe(state.clampHeight(before - 5));
+    });
+
+    /**
+     * @description input:stepChanged in manual/drag mode should switch state to 'manual'.
+     */
+    it('input:stepChanged — sets mode to manual', () => {
+        IFrameController.getInstance();
+        state.setMode('device');
+
+        bus.emit('input:stepChanged', { target: 'width', direction: 1, step: 1 });
+
+        expect(state.getMode()).toBe('manual');
+    });
+
+    // ── resetForTesting ───────────────────────────────────────────────────────
+
+    /**
+     * @description resetForTesting should allow a fresh singleton to be created.
+     */
+    it('resetForTesting — allows re-instantiation', () => {
+        IFrameController.getInstance();
+        IFrameController.resetForTesting();
+        const fresh = IFrameController.getInstance();
+        expect(fresh).not.toBeNull();
+    });
 });

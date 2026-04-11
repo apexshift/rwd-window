@@ -1,9 +1,16 @@
 /**
- * App - Main orchestrator for RWD Window
- * 
- * Wires together all managers and handles global initialization.
- * Uses the new core (EventBus + AppState) and provides user feedback on errors.
- * 
+ * @module App
+ * @description Main orchestrator for RWD Window.
+ *
+ * Wires together all manager singletons and drives the five-phase
+ * initialization sequence:
+ *
+ * 1. Register completion listeners on the EventBus.
+ * 2. Instantiate all manager singletons (they self-register via the bus).
+ * 3. Emit `app:init` to start UIManager's DOM construction.
+ * 4. Once all managers have reported ready, set the initial mode.
+ * 5. Emit `app:ready` so IFrameController can measure the real container.
+ *
  * @since 0.1.0
  */
 import { bus } from './core/EventBus.js';
@@ -17,6 +24,11 @@ import UIManager from './managers/UIManager.js';
 import { showError, showSuccess } from './Utils.js';
 
 export class App {
+  /**
+   * Tracks which managers have reported ready.
+   * @type {{ ui:boolean, breakpoints:boolean, iframeController:boolean, localLoader:boolean, keyboard:boolean }}
+   * @private
+   */
   #managerStatus = {
     ui: false,
     breakpoints: false,
@@ -25,6 +37,13 @@ export class App {
     keyboard: false
   };
 
+  /**
+   * Start the application.
+   *
+   * Registers bus listeners, instantiates all manager singletons, then emits
+   * `app:init` to kick off the initialization sequence. Any uncaught error
+   * surfaces as an error toast and an `app:error` bus event.
+   */
   init() {
     try {
       // === PHASE 1: Setup completion listeners ===
@@ -58,24 +77,40 @@ export class App {
     }
   }
 
+  /**
+   * Called when UIManager emits `ui:ready`.
+   * Signals all other managers to begin their own initialization.
+   * @private
+   */
   #onUIReady() {
     this.#managerStatus.ui = true;
     console.log('[App] UI ready');
-    
+
     // Once UI is ready, tell managers they can initialize
     bus.emit('app:managers:init', {});
   }
 
+  /**
+   * Called when any non-UI manager emits its ready event.
+   * Once all managers are ready, activates the application.
+   *
+   * @private
+   * @param {'breakpoints'|'iframeController'|'localLoader'|'keyboard'} managerName
+   */
   #onManagerReady(managerName) {
     this.#managerStatus[managerName] = true;
     console.log(`[App] ${managerName} ready`);
 
-    // Check if all managers are ready
     if (this.#allManagersReady()) {
       this.#activateApp();
     }
   }
 
+  /**
+   * Return true when every manager has reported ready.
+   * @private
+   * @returns {boolean}
+   */
   #allManagersReady() {
     return (
       this.#managerStatus.ui &&
@@ -86,6 +121,11 @@ export class App {
     );
   }
 
+  /**
+   * Final activation step — sets the initial mode then emits `app:ready`
+   * so IFrameController can measure the container and set the real dimensions.
+   * @private
+   */
   #activateApp() {
     console.log('[App] All systems ready, activating application');
 

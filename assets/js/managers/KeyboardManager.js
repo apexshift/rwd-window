@@ -1,11 +1,20 @@
 /**
- * KeyboardManager - Singleton
- * 
- * Enhanced keyboard shortcuts for Stage 2.
- * New additions:
- * - Tab / Shift+Tab → Cycle through breakpoints
- * - H → Toggle between min and max clamp heights
- * 
+ * @module KeyboardManager
+ * @description Singleton that owns all keyboard shortcut handling for RWD Window.
+ *
+ * Keyboard events are ignored when an `<input>` or `<textarea>` is focused so
+ * that typing into the dimension inputs does not trigger viewport shortcuts.
+ *
+ * Supported shortcuts:
+ * - `← →`           Resize width  (±1 / ±10 Shift / ±50 Ctrl/Cmd)
+ * - `↑ ↓`           Resize height (±1 / ±10 Shift / ±50 Ctrl/Cmd)
+ * - `1–9`           Quick-select breakpoint by index (second press toggles min/max)
+ * - `Tab/Shift+Tab` Cycle breakpoints forward/backward
+ * - `H`             Toggle between config minHeight and live container height
+ * - `F`             Fit to container
+ * - `Esc`           Clear current mode
+ * - `?`             Toggle splash.html (keyboard reference) in the viewport iframe — restores previous src on second press
+ *
  * @since 0.2.0
  */
 
@@ -17,9 +26,15 @@ import { showToast } from '../Utils.js';
 let instance = null;
 
 export class KeyboardManager {
+    /** @private @type {number} Zero-based index of the last activated breakpoint, or -1. */
     #lastActivatedIndex = -1;
-    #helpOverlay = null;
-    #isHelpVisible = false;
+
+    /**
+     * The demo URL that was active before splash.html was loaded.
+     * `null` means no previous state has been saved.
+     * @private @type {string|null}
+     */
+    #previousDemo = null;
 
     constructor() {
         if (instance) throw new Error('KeyboardManager is a singleton.');
@@ -29,17 +44,30 @@ export class KeyboardManager {
         bus.on('app:managers:init', () => this.#initializeManager());
     }
 
+    /**
+     * Return the shared KeyboardManager instance, creating it on first call.
+     * @returns {KeyboardManager}
+     */
     static getInstance() {
         if (!instance) instance = new KeyboardManager();
         return instance;
     }
 
+    /**
+     * Attach DOM and bus listeners, then signal readiness.
+     * @private
+     */
     #initializeManager() {
         this.#setupListeners();
         this.#setupEventBusListeners();
         bus.emit('keyboardManager:ready', {});
     }
 
+    /**
+     * Register the global `keydown` handler on `document`.
+     * All shortcut dispatch lives here to keep the logic in one readable switch.
+     * @private
+     */
     #setupListeners() {
         document.addEventListener('keydown', (e) => {
             if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
@@ -90,7 +118,7 @@ export class KeyboardManager {
 
                 case '?':
                 case '/':
-                    if (shift || key === '?') this.#toggleHelpOverlay();
+                    if (shift || key === '?') this.#loadSplash();
                     break;
 
                 default:
@@ -103,29 +131,58 @@ export class KeyboardManager {
         });
     }
 
+    /**
+     * Subscribe to bus events that affect KeyboardManager's own state.
+     * @private
+     */
     #setupEventBusListeners() {
-        bus.on('ui:helpClicked', () => this.#toggleHelpOverlay());
+        bus.on('ui:helpClicked', () => this.#loadSplash());
     }
 
+    /**
+     * Adjust the viewport width by `delta` pixels via state.
+     * @private
+     * @param {number} delta - Signed pixel amount.
+     */
     #resizeWidth(delta) {
         const current = state.getViewport();
         state.updateViewport(current.width + delta, current.height);
     }
 
+    /**
+     * Adjust the viewport height by `delta` pixels via state.
+     * @private
+     * @param {number} delta - Signed pixel amount.
+     */
     #resizeHeight(delta) {
         const current = state.getViewport();
         state.updateViewport(current.width, current.height + delta);
     }
 
+    /**
+     * Emit `viewport:fit` so IFrameController performs a fit-to-container.
+     * @private
+     */
     #triggerFit() {
         bus.emit('viewport:fit', {});
     }
 
+    /**
+     * Reset the viewport mode to 'manual' and clear any active breakpoint.
+     * @private
+     */
     #clearMode() {
         state.setMode('manual');
         state.setActiveBreakpoint(null);
     }
 
+    /**
+     * Activate the breakpoint at `index`. A second press on the same index
+     * toggles between max-width and min-width mode.
+     *
+     * @private
+     * @param {number} index - Zero-based breakpoint index.
+     */
     #selectBreakpointByIndex(index) {
         const bpManager = BreakpointManager.getInstance();
         const breakpoints = bpManager.getBreakpoints();
@@ -143,6 +200,13 @@ export class KeyboardManager {
         this.#lastActivatedIndex = index;
     }
 
+    /**
+     * Move to the next (`direction = 1`) or previous (`direction = -1`) breakpoint,
+     * wrapping around the ends of the list.
+     *
+     * @private
+     * @param {1|-1} direction
+     */
     #cycleBreakpoint(direction) {
         const bpManager = BreakpointManager.getInstance();
         const breakpoints = bpManager.getBreakpoints();
@@ -155,71 +219,52 @@ export class KeyboardManager {
         this.#selectBreakpointByIndex(nextIndex);
     }
 
+    /**
+     * Toggle the viewport height between `clamping.minHeight` and the live
+     * container height (`clamping.maxHeight`). Shows a toast confirming the
+     * new height.
+     * @private
+     */
     #toggleHeightClamp() {
         const current = state.getViewport();
         const clamping = state.getClamping();
 
         // Toggle between min and max height clamp
-        const newHeight = current.height === clamping.minHeight 
-            ? clamping.maxHeight 
+        const newHeight = current.height === clamping.minHeight
+            ? clamping.maxHeight
             : clamping.minHeight;
 
         state.updateViewport(current.width, newHeight);
         showToast(`Height: ${newHeight}px`, { type: 'info' });
     }
 
-    #toggleHelpOverlay() {
-        if (this.#isHelpVisible) {
-            this.#hideHelpOverlay();
+    /**
+     * Toggle the splash reference page in the viewport iframe.
+     * - First call: saves the current demo URL and loads `./splash.html`.
+     * - Second call: restores the previously saved demo URL.
+     *
+     * Triggered by the `?` key and the help button click (`ui:helpClicked`).
+     * @private
+     */
+    #loadSplash() {
+        const current = state.getCurrentDemo();
+        if (current === './splash.html') {
+            if (this.#previousDemo !== null) {
+                state.setCurrentDemo(this.#previousDemo);
+            }
+            this.#previousDemo = null;
         } else {
-            this.#showHelpOverlay();
+            this.#previousDemo = current;
+            state.setCurrentDemo('./splash.html');
         }
     }
 
-    #showHelpOverlay() {
-        if (this.#helpOverlay) this.#helpOverlay.remove();
-
-        this.#helpOverlay = document.createElement('div');
-        this.#helpOverlay.style.cssText = `
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.92); color: white; padding: 24px 28px; 
-            border-radius: 8px; z-index: 20000; font-family: monospace; 
-            max-width: 480px; box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-        `;
-
-        this.#helpOverlay.innerHTML = `
-            <h3 style="margin:0 0 18px 0; color:#4fc3f7;">Keyboard Shortcuts</h3>
-            <table style="width:100%; border-collapse:collapse; font-size:14px;">
-                <tr><td style="padding:4px 0;">← →</td><td>Resize width (±1 / ±10 Shift / ±50 Ctrl)</td></tr>
-                <tr><td style="padding:4px 0;">↑ ↓</td><td>Resize height (±1 / ±10 Shift / ±50 Ctrl)</td></tr>
-                <tr><td style="padding:4px 0;">1–9</td><td>Quick breakpoint (1st = Max, 2nd = Min)</td></tr>
-                <tr><td style="padding:4px 0;">Tab / Shift+Tab</td><td>Cycle through breakpoints</td></tr>
-                <tr><td style="padding:4px 0;">H</td><td>Toggle between min and max height clamp</td></tr>
-                <tr><td style="padding:4px 0;">F</td><td>Fit to Container</td></tr>
-                <tr><td style="padding:4px 0;">Esc</td><td>Clear current mode</td></tr>
-                <tr><td style="padding:4px 0;">? / Shift+/</td><td>Show this help</td></tr>
-            </table>
-            <div style="margin-top:20px; font-size:12px; opacity:0.75; text-align:center;">
-                Click anywhere or press ? to close
-            </div>
-        `;
-
-        this.#helpOverlay.addEventListener('click', () => this.#hideHelpOverlay());
-        document.body.appendChild(this.#helpOverlay);
-        this.#isHelpVisible = true;
-    }
-
-    #hideHelpOverlay() {
-        if (this.#helpOverlay) {
-            this.#helpOverlay.remove();
-            this.#helpOverlay = null;
-        }
-        this.#isHelpVisible = false;
-    }
-
-    // Public API
+    /**
+     * Toggle the splash reference page in the viewport iframe (public API).
+     * First call shows splash, second call restores the previous demo.
+     */
     toggleHelp() {
-        this.#toggleHelpOverlay();
+        this.#loadSplash();
     }
 }
 

@@ -1,3 +1,15 @@
+/**
+ * @module UIManager
+ * @description Singleton responsible for building and registering all DOM
+ * elements used by the RWD Window application.
+ *
+ * Initializes on the `app:init` bus event. Uses {@link UIFactory} to create
+ * control elements, then registers each one with an auto-generated getter/setter
+ * so other managers can access them via `UIManager.getInstance().<name>`.
+ *
+ * Dynamic input ceilings are kept in sync by listening for
+ * `state:containerWidthChanged` and `state:containerHeightChanged`.
+ */
 import { bus } from '../core/EventBus.js';
 import { UIFactory } from '../core/UIFactory.js';
 import config from '../../../config.json' with { type: "json" };
@@ -5,7 +17,7 @@ import config from '../../../config.json' with { type: "json" };
 let instance = null;
 
 export class UIManager {
-    // Private storage for all managed DOM elements
+    /** @private @type {Object<string, Element|null>} */
     #elements = {};
 
     constructor() {
@@ -19,13 +31,18 @@ export class UIManager {
         bus.on('app:init', () => this.#initialize());
     }
 
+    /**
+     * Return the shared UIManager instance, creating it on first call.
+     * @returns {UIManager}
+     */
     static getInstance() {
         if (!instance) instance = new UIManager();
         return instance;
     }
 
     /**
-     * Initialize UI when app:init event is received
+     * Build the UI, register elements, and set up event listeners.
+     * Emits `ui:ready` on success or `ui:error` if an exception is thrown.
      * @private
      */
     #initialize() {
@@ -35,7 +52,7 @@ export class UIManager {
             this.#createUI();
             this.#registerElements();
             this.#setupEventListeners();
-            
+
             bus.emit("ui:ready", {});
         } catch (err) {
             console.error('UIManager initialization failed:', err);
@@ -44,7 +61,11 @@ export class UIManager {
     }
 
     /**
-     * Internal safe DOM query
+     * Safe wrapper around `document.querySelector`.
+     * @private
+     * @param {string} selector
+     * @returns {Element|null}
+     * @throws {TypeError} If selector is not a string.
      */
     #get(selector) {
         if (typeof selector !== "string") {
@@ -54,7 +75,14 @@ export class UIManager {
     }
 
     /**
-     * Register an element with automatic getter + setter
+     * Register a named DOM element with an auto-generated getter and setter.
+     * The setter resolves a CSS selector string to an element via `#get()`.
+     * Warns at runtime if the element is not found (unless `warnIfMissing` is false).
+     *
+     * @private
+     * @param {string}      name              - Property name exposed on the instance.
+     * @param {string|null} selector          - CSS selector used for the initial lookup.
+     * @param {boolean}     [warnIfMissing=true]
      */
     #addElement(name, selector, warnIfMissing = true) {
         bus.emit('ui:addElement', {name, selector, warnIfMissing});
@@ -80,13 +108,23 @@ export class UIManager {
         bus.emit('ui:addElementComplete', {name, selector, warnIfMissing});
     }
 
+    /**
+     * Construct all control groups and append them to `.masthead__controls`.
+     * Throws if the masthead element is absent — it is a hard requirement.
+     * @private
+     */
     #createUI() {
         bus.emit('ui:createUI', {});
-        // Masthead is critical - we throw if missing
         const masthead = this.#get('.masthead__controls');
         if (!masthead) {
             throw new Error('UIManager: Cannot create UI Elements without div.masthead__controls.');
         }
+
+        // File Loader
+        const loaderContainer = UIFactory.createControlsContainer('loader');
+        const fileSelect = UIFactory.createSelectControl('Load', 'file-loader');
+        loaderContainer.appendChild(fileSelect);
+        masthead.appendChild(loaderContainer);
 
         // Create and append controls using UIFactory
         const fitContainer = UIFactory.createControlsContainer('fitContainer');
@@ -107,11 +145,6 @@ export class UIManager {
         dimensionsContainer.appendChild(heightInput);
         masthead.appendChild(dimensionsContainer);
 
-        const loaderContainer = UIFactory.createControlsContainer('loader');
-        const fileSelect = UIFactory.createSelectControl('Load', 'file-loader');
-        loaderContainer.appendChild(fileSelect);
-        masthead.appendChild(loaderContainer);
-
         const helpContainer = UIFactory.createControlsContainer('help');
         const helpBtn = UIFactory.createHelpButton(
             config.ui_controls.help.label,
@@ -126,28 +159,32 @@ export class UIManager {
         bus.emit('ui:createUIComplete');
     }
 
+    /**
+     * Register all managed DOM elements with `#addElement` and define
+     * derived getters for `widthInput`, `heightInput`, `stepButtons`,
+     * `resizeHandles`, and `Elements`.
+     * @private
+     */
     #registerElements() {
         bus.emit("ui:registerElement", {});
-        // Register elements with automatic getters/setters
         this.#addElement('masthead', null, false);           // already set in #createUI
         this.#addElement('fitBtn', '[data-mode="fit"]');
         this.#addElement('deviceContainer', '#devices');
         this.#addElement('dimensionsContainer', '#dimensions');
         this.#addElement('loaderContainer', '#loader');
-        this.#addElement('fileSelect', '#file-loader');      // assuming this ID
+        this.#addElement('fileSelect', '#file-loader');
         this.#addElement('helpBtn', null, false); // created directly in #createUI
 
         // Nested / derived elements
-        this.#addElement('appWindow', '.app__window__view');        // adjust selector as needed
+        this.#addElement('appWindow', '.app__window__view');
         this.#addElement('viewport', '.viewport');
         this.#addElement('iFrame', '.viewport__frame');
 
-        // Width & Height inputs - registered after dimensionsContainer exists
+        // Width & Height inputs live inside dimensionsContainer
         if (this.dimensionsContainer) {
             this.#elements.widthInput = this.dimensionsContainer.querySelector('#width-control');
             this.#elements.heightInput = this.dimensionsContainer.querySelector('#height-control');
 
-            // Define getters for widthInput and heightInput
             Object.defineProperty(this, 'widthInput', {
                 get: () => this.#elements.widthInput,
                 enumerable: true
@@ -161,13 +198,19 @@ export class UIManager {
             console.warn('UIManager: dimensionsContainer not found - width/height inputs unavailable');
         }
 
-        // Special derived getter: stepButtons
+        /**
+         * Live list of all increment/decrement step buttons.
+         * @type {HTMLButtonElement[]}
+         */
         Object.defineProperty(this, 'stepButtons', {
             get: () => Array.from(this.dimensionsContainer?.querySelectorAll('.app__control-increment') || []),
             enumerable: true
         });
 
-        // Special derived getter: resizeHandles
+        /**
+         * The three viewport resize handle elements.
+         * @type {{ left:Element|null, right:Element|null, bottom:Element|null }}
+         */
         Object.defineProperty(this, 'resizeHandles', {
             get: () => {
                 const resizeHandles = {
@@ -179,9 +222,9 @@ export class UIManager {
                 return resizeHandles;
             },
             enumerable: true
-        })
+        });
 
-        // Expose raw elements object if needed (read-only)
+        /** Read-only snapshot of the internal elements map. */
         Object.defineProperty(this, 'Elements', {
             get: () => ({ ...this.#elements }),
             enumerable: true
@@ -191,8 +234,15 @@ export class UIManager {
     }
 
     /**
-     * Setup input listeners (moved here for clarity)
-     * Call this after registration if needed
+     * Attach all DOM event listeners and bus subscriptions.
+     *
+     * - fitBtn click → `viewport:fit`
+     * - Step button clicks → `input:stepChanged`
+     * - Width/height input keydown (ArrowUp/Down) → `input:stepChanged`
+     * - Width/height input keydown (Enter) / blur → `input:stepCommit`
+     * - `state:containerWidthChanged` → update `widthInput.max`
+     * - `state:containerHeightChanged` → update `heightInput.max`
+     * @private
      */
     #setupEventListeners() {
         bus.emit('ui:setupEventListeners', {});
@@ -218,7 +268,7 @@ export class UIManager {
             });
         });
 
-        // Keyboard handling
+        // Keyboard handling for number inputs
         const handleKeydown = (isWidth) => (e) => {
             if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                 const step = e.shiftKey ? 10 : ((e.ctrlKey || e.metaKey) ? 50 : 1);
@@ -252,12 +302,14 @@ export class UIManager {
         bus.emit("ui:setupEventListenersComplete", {});
     }
 
-    // Placeholder for future dynamic refresh
+    /**
+     * Placeholder for re-querying critical elements if the DOM changes dynamically.
+     */
     refresh() {
         // Re-query critical elements if DOM changes dynamically
-        // this.masthead = '.masthead__controls'; // example
     }
 
+    /** Log the internal elements map to the console (debug utility). */
     toString() {
         console.info(this.#elements);
     }

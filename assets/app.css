@@ -192,6 +192,7 @@ select.app__control-input {
   width: 100%;
   height: 100%;
   border-radius: var(--space-8);
+  border: 1px solid var(--theme-grey);
   background-color: var(--theme-slate);
   overflow: hidden;
   transition: width var(--speed-faster) var(--ease-hop), height var(--speed-faster) var(--ease-hop);
@@ -206,7 +207,7 @@ select.app__control-input {
     --rail-width: var(--space-12);
     position: absolute;
     background-color: var(--theme-highlight);
-    opacity: 0.2;
+    opacity: 0;
     transition: opacity var(--speed-faster) var(--ease-hop);
     cursor: ns-resize;
 
