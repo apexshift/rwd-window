@@ -11,7 +11,7 @@ It features:
 - Local and remote demo loading via dropdown
 - Comprehensive keyboard shortcuts
 - Toast notifications for user feedback
-- Help overlay with shortcut reference
+- Splash screen (`splash.html`) with full keyboard and UI reference, loaded into the viewport iframe
 
 The entire application is built with **pure vanilla JavaScript** using ES modules. There are **no frameworks**, **no bundlers**, **no build step**, and **no runtime dependencies**. Users can simply open `index.html` in a modern browser and the tool works immediately.
 
@@ -28,7 +28,7 @@ The entire application is built with **pure vanilla JavaScript** using ES module
 - Keep interactions smooth and responsive (drag handles, keyboard, toasts).
 - All configurable values must live in `config.json` — never hard-code them.
 
-**Current version**: 0.1.0-beta
+**Current version**: 1.0.0
 
 ## Repository Structure
 ```plain
@@ -141,9 +141,9 @@ When modifying or extending configuration:
 
 ### Quality & Testing
 
-- No automated tests exist yet (npm test is a placeholder).
+- **102 tests** across 9 suites using **Vitest** with a happy-dom environment (`npm test`).
+- Tests cover all managers (`BreakpointManager`, `IFrameController`, `KeyboardManager`, `LocalLoader`, `UIManager`), all core modules (`AppState`, `EventBus`, `UIFactory`), and utilities (`Utils`).
 - No linting or formatting configuration is present.
-- Recommended next step: Introduce Vitest for testing managers and Utils, plus basic integration tests for viewport resizing and event flows.
 
 ### Git & Contribution Workflow
 

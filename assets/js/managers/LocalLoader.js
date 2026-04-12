@@ -8,7 +8,7 @@
  * `state:currentDemoChanged` so the iframe stays in sync regardless of how
  * the demo is changed.
  *
- * @since 0.1.0-beta
+ * @since 0.1.0
  */
 
 import config from "../../../config.json" with { type: "json" };

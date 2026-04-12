@@ -1,32 +1,34 @@
 # RWD Window
 
-A lightweight, desktop-only responsive viewport simulator for rapid frontend prototyping. Built with pure vanilla JavaScript.
+A lightweight, desktop-only responsive viewport simulator for rapid frontend prototyping. Built with pure vanilla JavaScript — no frameworks, no bundlers, no build step.
 
-## Features (v0.1.0-beta)
+## Features
+
 - Dynamic device breakpoints loaded from `config.json`
-- Device buttons with single-click (Max) and second-click (Min) toggle
+- Device buttons with single-click (Max) and second-click (Min) width toggle
 - Passive breakpoint range indicator — matching device button highlights during drag or manual input
 - Drag-to-resize with smooth, `requestAnimationFrame`-throttled handles
-- Manual width/height inputs with ± increment buttons
+- Manual width/height inputs with ± increment buttons (1px / 10px Shift / 50px Ctrl)
 - Fit to Container mode — always measures real available space, correct on any screen size
-- Feedback label shows active breakpoint name with `(Min)` suffix in min-width mode
-- First configured demo auto-loads on startup
+- Dynamic input ceilings — `max` on width and height inputs updates in real time to match the live container
 - Local and remote demo loading via dropdown
+- Toast notifications for user feedback (replaces static feedback label)
+- Splash screen (`splash.html`) — full keyboard and UI reference loaded directly in the viewport
 - Keyboard shortcuts:
   - Arrow keys for precise resizing (with Shift/Ctrl modifiers)
-  - 1–9 for quick breakpoint selection (with toggle)
-  - F for Fit to Container
-  - Esc to clear mode
-  - Tab/Shift+Tab to cycle breakpoints
-  - H to toggle min/max height clamp
-  - ? or Shift+/ for help overlay
+  - `1–9` for quick breakpoint selection (second press toggles min-width)
+  - `Tab` / `Shift+Tab` to cycle breakpoints
+  - `H` to toggle between min and max height clamp
+  - `F` for Fit to Container
+  - `Esc` to clear current mode
+  - `?` / `Shift+/` to load the splash reference page (second press restores previous content)
 - Shortcut tooltips on all buttons
-- Centralized clamping settings in `config.json`
-- User-friendly toast messages
+- Centralized configuration in `config.json`
+- Full test suite — 102 tests across 9 suites (Vitest + happy-dom)
 
 ## Configuration (`config.json`)
 
-The project uses a unified single `config.json` file:
+The project uses a single `config.json` file at the root:
 
 ```json
 {
@@ -34,11 +36,13 @@ The project uses a unified single `config.json` file:
     "clamping": { "minWidth": 320, "maxWidth": 1920, "minHeight": 640, "maxHeight": 1080 }
   },
   "ui_controls": {
-    "fitToContainer": { ... },
-    "breakpoints": [ ... ],
-    "help": { ... }
+    "fitToContainer": { "label": "Fit", "icon": "..." },
+    "breakpoints": [ { "label": "Mobile Portrait", "minWidth": 320, "maxWidth": 477, "icon": "..." } ],
+    "help": { "label": "Help", "icon": "..." }
   },
-  "files": [ ... ]
+  "files": [
+    { "id": 1, "label": "My Project", "value": "./path/to/index.html" }
+  ]
 }
 ```
 
@@ -46,82 +50,91 @@ The project uses a unified single `config.json` file:
 
 ## Keyboard Shortcuts
 
-Press `?` or click the help button (?) to see full list.
+Press `?` or click the help button to load the full reference page directly in the viewport. Press again to restore the previous content.
+
+| Key | Action | Modifier extensions |
+|-----|--------|-------------------|
+| `← →` | Resize width ±1px | `+Shift` ×10, `+Ctrl` ×50 |
+| `↑ ↓` | Resize height ±1px | `+Shift` ×10, `+Ctrl` ×50 |
+| `1–9` | Select breakpoint (max-width) | 2nd press = min-width |
+| `Tab` | Cycle breakpoints forward | `+Shift` = reverse |
+| `H` | Toggle min / max height clamp | — |
+| `F` | Fit to Container | — |
+| `Esc` | Clear current mode | — |
+| `?` | Load splash reference page | 2nd press restores previous |
 
 ## Usage
-1. Open `index.html` in a browser (or serve with Live Server).
-2. The viewport fits to the available container space and loads the first configured demo automatically.
-3. Use the device buttons:
-   - Click once → Max width for that breakpoint
-   - Click again → Min width (button label shows `(Min)` in the feedback bar)
-   - Double-click → Fit to Container
-4. Drag the resize handles or use the W/H inputs for manual control. The matching device button highlights as a range indicator while you drag.
-5. Switch demos from the dropdown at any time.
+
+1. Open `index.html` in a browser (or serve with Live Server / any static server).
+2. The viewport fits the available container space on load. The splash reference page is shown by default.
+3. Select a demo from the dropdown to load it in the viewport.
+4. Use the device buttons:
+   - Click once → max width for that breakpoint
+   - Click again → min width
+5. Drag the resize handles or use the W / H inputs for manual control. The matching device button highlights as a passive range indicator.
+6. Use `?` or the help button to toggle the splash reference page at any time.
 
 ## Project Structure
 
 ```text
 assets/js/
 ├── core/
-├──── AppState.js
-├──── EventBus.js
-├──── UIFactory.js
+│   ├── AppState.js       — Reactive state singleton
+│   ├── EventBus.js       — Pub/sub event system
+│   └── UIFactory.js      — Dynamic UI element factory
 ├── managers/
-├──── BreakpointManager.js
-├──── IFrameController.js
-├──── KeyboardManager.js
-├──── LocalLoader.js
-├──── UIManager.js
-├── App.js
-└── Utils.js
-config.json
-index.html
+│   ├── BreakpointManager.js
+│   ├── IFrameController.js
+│   ├── KeyboardManager.js
+│   ├── LocalLoader.js
+│   └── UIManager.js
+├── App.js                — Bootstrap orchestrator
+└── Utils.js              — Toast notifications and shared helpers
+config.json               — Single source of truth for all settings
+index.html                — Entry point
+splash.html               — Keyboard and UI reference page
 ```
 
 ## Event System
 
-The application uses a lightweight EventBus for decoupled communication between modules. Below is a complete list of all registered events:
+The application uses a lightweight EventBus for decoupled communication between modules.
 
-### Registered Events
+| Event | Emitted By | Listened By | Purpose |
+|-------|-----------|------------|---------|
+| `app:init` | `App.js` | `UIManager` | Signals singletons ready; UIManager builds the DOM |
+| `app:managers:init` | `App.js` | `BreakpointManager`, `KeyboardManager`, `LocalLoader`, `IFrameController` | UI ready; managers initialise |
+| `app:ready` | `App.js` | `BreakpointManager`, `IFrameController` | All managers ready; first fit-to-container runs |
+| `state:viewportChanged` | `AppState` | `IFrameController`, `BreakpointManager` | Viewport width/height changed |
+| `state:modeChanged` | `AppState` | `IFrameController`, `BreakpointManager` | Mode changed (`manual`, `device`, or `fit`) |
+| `state:activeBreakpointChanged` | `AppState` | `IFrameController`, `BreakpointManager` | Active breakpoint or min/max state changed |
+| `state:currentDemoChanged` | `AppState` | `LocalLoader` | Current demo URL changed |
+| `state:containerWidthChanged` | `AppState` | `UIManager` | Live container width updated; syncs `widthInput.max` |
+| `state:containerHeightChanged` | `AppState` | `UIManager` | Live container height updated; syncs `heightInput.max` |
+| `breakpoint:activated` | `BreakpointManager` | `IFrameController` | Breakpoint activated with min/max info |
+| `viewport:fit` | `UIManager`, `KeyboardManager`, `BreakpointManager` | `IFrameController` | Request fit-to-container |
+| `demo:changed` | `UIFactory` (select), `LocalLoader` | `LocalLoader` | User selected a demo |
+| `ui:helpClicked` | Help button (`UIFactory`) | `KeyboardManager` | User clicked the help button |
+| `config:error` | `BreakpointManager`, `LocalLoader` | `App.js` | Configuration error (shown as toast) |
+| `input:stepChanged` | `UIManager` | `IFrameController` | ± button click or arrow key in input |
+| `input:stepCommit` | `UIManager` | `IFrameController` | Value committed on blur or Enter |
 
-| Event Name                        | Emitted By                        | Listened By                                   | Purpose |
-|-----------------------------------|-----------------------------------|-----------------------------------------------|---------|
-| `app:init`                        | `App.js`                          | `UIManager`                                   | Signals singletons are ready; UIManager begins building the DOM |
-| `app:managers:init`               | `App.js`                          | `BreakpointManager`, `KeyboardManager`, `LocalLoader`, `IFrameController` | UI is ready; managers can initialise |
-| `app:ready`                       | `App.js`                          | `BreakpointManager`, `IFrameController`       | All managers ready; app performs first fit-to-container |
-| `state:viewportChanged`           | `AppState.js`                     | `IFrameController`, `BreakpointManager`       | Viewport size (width/height) has changed |
-| `state:modeChanged`               | `AppState.js`                     | `IFrameController`, `BreakpointManager`       | Current mode changed (`manual`, `device`, or `fit`) |
-| `state:activeBreakpointChanged`   | `AppState.js`                     | `IFrameController`, `BreakpointManager`       | Active breakpoint or its min/max state changed |
-| `state:currentDemoChanged`        | `AppState.js`                     | `LocalLoader`                                 | Current demo URL changed |
-| `breakpoint:activated`            | `BreakpointManager`               | `IFrameController`                            | A breakpoint was activated (includes min/max info) |
-| `viewport:fit`                    | `UIManager`, `KeyboardManager`, `BreakpointManager` | `IFrameController`          | Request to switch to Fit to Container mode |
-| `demo:changed`                    | `UIFactory` (select), `LocalLoader` | `LocalLoader`                               | User selected a demo or first demo auto-loaded |
-| `ui:helpClicked`                  | Help button (`UIFactory`)         | `KeyboardManager`                             | User clicked the help button |
-| `config:error`                    | `BreakpointManager`, `LocalLoader` | `App.js`                                     | Configuration loading error (shown as toast) |
-| `input:stepChanged`               | `UIManager`                       | `IFrameController`                            | ± button click or arrow key increment request |
-| `input:stepCommit`                | `UIManager`                       | `IFrameController`                            | User committed a value (on blur or Enter key) |
+**Notes:**
+- `state:*Changed` events are emitted only when the value actually changes (deep equality guard).
+- The help button and `?` key both route through `ui:helpClicked` → `KeyboardManager#loadSplash()`.
+- `BreakpointManager` listens to `state:viewportChanged` (range highlight during drag) and `state:modeChanged` (clear highlight on fit).
 
-### Notes
+## Testing
 
-- All events are handled through the central `EventBus`.
-- `state:*Changed` events are automatically emitted by `AppState.set()` only when the value actually changes (strict equality check) — handlers will not fire for no-op updates.
-- Input-related events (`input:stepChanged`, `input:stepCommit`) power the ± increment buttons and keyboard navigation inside the width/height fields.
-- The help button and `?` key both emit `ui:helpClicked`.
-- `BreakpointManager` listens to both `state:viewportChanged` (to highlight the matching range button during drag) and `state:modeChanged` (to clear highlights when entering fit mode).
+```bash
+npm test
+```
 
-This event system keeps the managers loosely coupled and makes the codebase easier to extend.
+102 tests across 9 suites using Vitest with happy-dom. All managers, core modules, and utilities are covered.
 
 ## Roadmap
-- Orientation toggle (`up next`)
-  - Restricted to mobile and tablet breakpoints, but config driven
+
+- Orientation toggle (restricted to mobile/tablet breakpoints, config-driven)
 - Configurable clamping limits UI
-- Visual Overlays UI
-  - Container Identification, including
-    - the container name
-    - the container type
-    - the container dimensions
-  - Grid identification
-  - Outline mode
-  - X-ray mode (probably a css filter??).
+- Visual overlays (container identification, grid lines, outline mode, x-ray mode)
 - LocalStorage persistence
 - Export current viewport state

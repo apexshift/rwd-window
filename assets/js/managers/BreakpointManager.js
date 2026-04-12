@@ -11,7 +11,7 @@
  * - Provide a passive range hint during manual/drag resize by highlighting the
  *   button whose `[minWidth, maxWidth]` range contains the current viewport width.
  *
- * @since 0.1.0-beta
+ * @since 0.1.0
  */
 
 import config from "../../../config.json" with { type: "json" };
