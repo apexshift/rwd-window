@@ -59,11 +59,6 @@
             "id": 1,
             "label": "Shipped Demo",
             "value": "./public/demo-01/index.html"
-        },
-        {
-            "id": 2,
-            "label": "PJL Accounts",
-            "value": "https://pjlaccounts.local"
         }
     ]
 }

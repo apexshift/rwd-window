@@ -1,9 +1,0 @@
-{
-  "files": [
-    {
-      "id": 1,
-      "label": "Shipped Demo",
-      "value": "./public/demo-01/index.html"
-    }
-  ]
-}
