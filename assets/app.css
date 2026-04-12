@@ -24,17 +24,13 @@
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: var(--space-16);
   padding-bottom: var(--space-8);
 }
 
 .app__masthead-ident {
-  position: absolute;
   line-height: 1;
-  left: 0;
-  bottom: 50%;
-  transform: translateY(50%);
 }
 
 .masthead__controls {
@@ -43,25 +39,15 @@
   gap: calc(var(--space-4) * .5);
 }
 
-.app__masthead-feedback {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  transform: translateY(-50%);
-  background-color: var(--theme-active);
-  color: var(--theme-dark);
-  padding: var(--space-4) var(--space-8);
-  border-radius: var(--space-4);
-  text-transform: capitalize;
-  cursor: default;
-  pointer-events: none;
-}
-
 .controls-group {
   display: flex;
   align-items: center;
   gap: 0.1rem;
   padding: var(--space-8);
+
+  &#dimensions {
+    gap: var(--space-8);
+  }
 }
 
 .ui-button {
@@ -83,6 +69,11 @@
     background-color: var(--theme-black);
     outline: 1px solid var(--theme-highlight);
     outline-offset: 0;
+  }
+
+  img {
+    width: 100%;
+    aspect-ratio: 1;
   }
 }
 
@@ -113,7 +104,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--theme-dark);
     width: var(--space-32);
     aspect-ratio: 1;
     font-size: var(--text-sm);
@@ -124,6 +114,21 @@
       height: var(--space-32);
       aspect-ratio: unset;
       padding-inline: var(--space-8);
+    }
+  }
+
+  .app__control-wrapper {
+    display: flex;
+
+    .ui-button {
+      outline: unset;
+      border-left: 1px solid var(--theme-slate);
+
+      &:hover, &:active {
+        color: var(--theme-highlight);
+        outline: unset;
+        outline-offset: unset;
+      }
     }
   }
 
@@ -187,6 +192,7 @@ select.app__control-input {
   width: 100%;
   height: 100%;
   border-radius: var(--space-8);
+  border: 1px solid var(--theme-grey);
   background-color: var(--theme-slate);
   overflow: hidden;
   transition: width var(--speed-faster) var(--ease-hop), height var(--speed-faster) var(--ease-hop);
@@ -201,7 +207,7 @@ select.app__control-input {
     --rail-width: var(--space-12);
     position: absolute;
     background-color: var(--theme-highlight);
-    opacity: 0.2;
+    opacity: 0;
     transition: opacity var(--speed-faster) var(--ease-hop);
     cursor: ns-resize;
 

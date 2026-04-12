@@ -1,378 +1,446 @@
+/**
+ * @module IFrameController
+ * @description Singleton viewport engine for RWD Window.
+ *
+ * Owns all iframe/viewport sizing logic. Decoupled from other modules via
+ * AppState and EventBus — it reads dimensions from state and writes back via
+ * `state.updateViewport()`. The only direct DOM touches are style assignments
+ * driven by `state:viewportChanged`.
+ *
+ * Initialization sequence:
+ * 1. Constructor wires up state subscriptions immediately.
+ * 2. `app:managers:init` → `#initializeManager()` caches UIManager + elements.
+ * 3. `app:ready` → `#initializeFromState()` measures the container and fits.
+ */
+import config from '../../../config.json' with { type: "json" };
 import { bus } from '../core/EventBus.js';
 import { state } from '../core/AppState.js';
-import LocalLoader from './LocalLoader.js';  // default import for your singleton
-
-/**
- * IFrameController - Singleton
- * 
- * Central viewport engine. Now decoupled via AppState + EventBus.
- * All size/mode changes flow through central state.
- * Your drag, second-click, clamping, fit, and input logic fully preserved.
- * 
- * @since 0.0.1-beta (infrastructure refactor applied)
- */
+import UIManager from './UIManager.js';
+import { showToast } from '../Utils.js';
 
 let instance = null;
 
 export class IFrameController {
-  // ==================== DEFAULTS ====================
-  #defaults = {
-    minWidth: 320,
-    maxWidth: 1920,
-    minHeight: 640,
-    maxHeight: 1080,
-  };
+    /** @type {number} Absolute minimum viewport width. */
+    MIN_WIDTH = 320;
+    /** @type {number} Absolute maximum viewport width. */
+    MAX_WIDTH = 1920;
+    /** @type {number} Absolute minimum viewport height. */
+    MIN_HEIGHT = 640;
+    /** @type {number} Absolute maximum viewport height. */
+    MAX_HEIGHT = 1080;
 
-  // ==================== DOM REFERENCES ====================
-  #elements = {
-    app_window: null,
-    viewport: null,
-    iframe: null,
-    feedback: null,
-    widthInput: null,
-    heightInput: null,
-    resetBtn: null,
-    fitBtn: null,
-    deviceButtons: null,
-    resizeHandles: { left: null, right: null, bottom: null },
-    fileSelector: null,
-  };
+    // ==================== PRIVATE FIELDS ====================
 
-  #isDragging = false;
-
-  // ==================== PRIVATE CONSTRUCTOR ====================
-  constructor() {
-    if (instance) {
-      throw new Error('IFrameController is a singleton. Use IFrameController.getInstance() instead.');
-    }
-
-    this.#collectElements();
-    this.#setupEventListeners();
-    this.#initializeFromState();
-
-    instance = this;
-
-    // Subscribe to central state changes (decouples from other managers)
-    bus.on('state:viewportChanged', ({ value }) => this.#applyViewportFromState(value));
-    bus.on('state:modeChanged', ({ value }) => this.#applyModeFromState(value));
-    bus.on('state:activeBreakpointChanged', ({ value }) => this.#applyBreakpointFromState(value));
-    // Listen for explicit breakpoint activation from BreakpointManager (this is the important one)
-    bus.on('breakpoint:activated', (payload) => {
-      const { breakpoint, isMinMode, targetWidth } = payload || {};
-      if (typeof targetWidth !== 'number' || isNaN(targetWidth)) return;
-
-      const currentHeight = state.getViewport().height;
-      state.updateViewport(targetWidth, currentHeight);
-      this.#updateFeedback();
-    });
-  }
-
-  // ==================== SINGLETON ACCESS ====================
-  static getInstance() {
-    if (!instance) {
-      instance = new IFrameController();
-    }
-    return instance;
-  }
-
-  // ==================== DOM COLLECTION ====================
-  #collectElements() {
-    this.#elements.app_window = document.querySelector('.app__window__view');
-    this.#elements.viewport = document.querySelector('.viewport');
-    this.#elements.iframe = document.getElementById('viewport-target');
-    this.#elements.feedback = document.querySelector('.app__masthead-feedback');
-    this.#elements.widthInput = document.getElementById('width-control');
-    this.#elements.heightInput = document.getElementById('height-control');
-    this.#elements.resetBtn = document.querySelector('[data-mode="reset"]');
-    this.#elements.fitBtn = document.querySelector('[data-mode="fit"]');
-    
-    this.#elements.deviceButtons = document.querySelectorAll(
-      '.controls-group button[data-mode]:not([data-mode="fit"]):not([data-mode="reset"])'
-    );
-
-    this.#elements.fileSelector = document.querySelector('#file-loader');
-
-    this.#elements.resizeHandles.left   = document.querySelector('.viewport__rs.left');
-    this.#elements.resizeHandles.right  = document.querySelector('.viewport__rs.right');
-    this.#elements.resizeHandles.bottom = document.querySelector('.viewport__rs.bottom');
-
-    if (!this.#elements.app_window || !this.#elements.viewport || !this.#elements.iframe) {
-      throw new Error('Critical elements missing: app_window_view or viewport or iframe');
-    }
-  }
-
-  // ==================== INITIALIZATION FROM CENTRAL STATE ====================
-  #initializeFromState() {
-    const initialViewport = state.getViewport();
-    this.#applyViewportFromState(initialViewport);
-    this.#applyModeFromState(state.getMode());
-  }
-
-  #applyViewportFromState(viewport) {
-    this.#elements.viewport.style.width = `${viewport.width}px`;
-    this.#elements.viewport.style.height = `${viewport.height}px`;
-
-    this.#elements.widthInput.value = viewport.width;
-    this.#elements.heightInput.value = viewport.height;
-
-    this.#updateFeedback();
-  }
-
-  #applyModeFromState(mode) {
-    // Future: handle device mode via activeBreakpoint
-    this.#updateFeedback();
-  }
-
-  #applyBreakpointFromState(breakpointData) {
-    if (!breakpointData) return;
-
-    const { breakpoint, isMinMode, targetWidth } = breakpointData;
-
-    let finalWidth = targetWidth;
-
-    // Fallback logic if targetWidth is missing
-    if (typeof finalWidth !== 'number' || isNaN(finalWidth)) {
-      finalWidth = isMinMode ? breakpoint?.minWidth : breakpoint?.maxWidth;
-    }
-
-    if (typeof finalWidth !== 'number' || isNaN(finalWidth)) {
-      console.warn('[IFrameController] Could not determine valid width from breakpoint data');
-      return;
-    }
-
-    const currentHeight = state.getViewport().height || this.#defaults.minHeight;
-    state.updateViewport(finalWidth, currentHeight);
-
-    this.#updateFeedback();
-  }
-
-  // ==================== DEBOUNCE ====================
-  #debounce(fn, delay = 16) {
-    let timeout;
-    return (...args) => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => fn.apply(this, args), delay);
-    };
-  }
-
-  // ==================== IFRAME POINTER EVENTS ====================
-  #enableIframePointerEvents(enabled) {
-    if (this.#elements.iframe) {
-      this.#elements.iframe.style.pointerEvents = enabled ? 'auto' : 'none';
-    }
-  }
-
-  // ==================== CORE SIZE LOGIC (now publishes to state) ====================
-  #setSize(width, height, source = 'manual') {
-    const w = state.clampWidth(width);
-    const h = state.clampHeight(height);
-
-    // Update central state → this triggers #applyViewportFromState via subscription
-    state.updateViewport(w, h);
-
-    if (source === 'manual' || source === 'drag') {
-      state.setMode('manual');
-      // Clear active breakpoint when user manually resizes
-      if (state.getActiveBreakpoint()) state.setActiveBreakpoint(null);
-    }
-
-    this.#updateFeedback();
-  }
-
-  #updateFeedback() {
-    const mode = state.getMode();
-    const activeBp = state.getActiveBreakpoint();
-    let text = mode === 'fit' 
-      ? 'Fit to Container' 
-      : (activeBp?.label || 'Custom');
-
-    // TODO: enhance with second-click / min-mode once BreakpointManager is wired
-    this.#elements.feedback.textContent = text;
-  }
-
-  #fitToContainer() {
-    const rect = this.#elements.app_window.getBoundingClientRect();
-    const width = Math.floor(rect.width);
-    const height = Math.floor(rect.height);
-
-    state.setMode('fit');
-    state.setActiveBreakpoint(null);
-    state.updateViewport(width, height);
-
-    this.#clearAllDeviceActiveStates();
-    if (this.#elements.fitBtn) this.#elements.fitBtn.classList.add('active');
-  }
-
-  #handleDeviceButtonClick(button) {
-    // For now (hardcoded buttons): treat as before, but publish to state
-    const minW = parseInt(button.dataset.minWidth) || this.#defaults.minWidth;
-    const maxW = parseInt(button.dataset.maxWidth) || this.#defaults.maxWidth;
-
-    const isSame = state.getActiveBreakpoint() && 
-                   state.getActiveBreakpoint().label === button.dataset.mode;
-
-    const isSecondClick = isSame ? !state.get('isSecondClick') : false; // temporary local flag until full breakpoint manager
-
-    const targetWidth = isSecondClick ? minW : maxW;
-
-    state.setMode('device');
-    // In Stage 1 we'll store full breakpoint object
-    state.updateViewport(targetWidth, state.getViewport().height);
-
-    this.#clearAllDeviceActiveStates();
-    button.classList.add('active');
-    if (this.#elements.fitBtn) this.#elements.fitBtn.classList.remove('active');
-
-    // Publish for other components
-    bus.emit('device:buttonClicked', { button, isSecondClick });
-  }
-
-  #clearAllDeviceActiveStates() {
-    this.#elements.deviceButtons.forEach(btn => btn.classList.remove('active'));
-    if (this.#elements.fitBtn) this.#elements.fitBtn.classList.remove('active');
-  }
-
-  // ==================== EVENT SETUP ====================
-  #setupEventListeners() {
-    // Fit / Reset
-    this.#elements.resetBtn?.addEventListener('click', () => this.#fitToContainer());
-    this.#elements.fitBtn?.addEventListener('click', () => this.#fitToContainer());
-
-    // Device buttons (still hardcoded for now)
-    this.#elements.deviceButtons.forEach(btn => {
-      btn.addEventListener('click', () => this.#handleDeviceButtonClick(btn));
-    });
-
-    // Width / Height inputs (blur + Enter)
-    const handleWidthBlur = () => {
-      let val = this.#elements.widthInput.value.trim();
-      if (val === '-') { this.#fitToContainer(); return; }
-      let width = parseInt(val);
-      if (isNaN(width)) { this.#elements.widthInput.value = state.getViewport().width; return; }
-      this.#setSize(width, state.getViewport().height, 'manual');
+    /**
+     * @private
+     * @type {{ minWidth:number, maxWidth:number, minHeight:number, maxHeight:number }}
+     */
+    #defaults = {
+        minWidth: config.app.clamping.minWidth || this.MIN_WIDTH,
+        maxWidth: config.app.clamping.maxWidth || this.MAX_WIDTH,
+        minHeight: config.app.clamping.minHeight || this.MIN_HEIGHT,
+        maxHeight: config.app.clamping.maxHeight || this.MAX_HEIGHT,
     };
 
-    this.#elements.widthInput.addEventListener('blur', handleWidthBlur);
-    this.#elements.widthInput.addEventListener('keydown', e => { if (e.key === 'Enter') this.#elements.widthInput.blur(); });
+    /** @private @type {Object<string, Element|null>} Cached DOM element references. */
+    #elements = {};
 
-    const handleHeightBlur = () => {
-      let val = this.#elements.heightInput.value.trim();
-      if (val === '-') {
-        const fullH = Math.floor(this.#elements.app_window.getBoundingClientRect().height);
-        this.#setSize(state.getViewport().width, fullH, 'manual');
-        return;
-      }
-      let height = parseInt(val);
-      if (isNaN(height)) { this.#elements.heightInput.value = state.getViewport().height; return; }
-      this.#setSize(state.getViewport().width, height, 'manual');
-    };
+    /** @private @type {ReturnType<typeof setTimeout>|null} Debounce timer for window resize. */
+    #debounceTimer = null;
 
-    this.#elements.heightInput.addEventListener('blur', handleHeightBlur);
-    this.#elements.heightInput.addEventListener('keydown', e => { if (e.key === 'Enter') this.#elements.heightInput.blur(); });
+    /** @type {UIManager|null} Public reference to the UIManager singleton. */
+    UIManager = null;
 
-    // Resize handles (drag logic unchanged except final size goes through #setSize)
-    this.#setupResizeHandles();
+    // ==================== SINGLETON CONSTRUCTOR ====================
 
-    // Window resize (fit behavior)
-    window.addEventListener('resize', this.#debounce(() => {
-      if (state.getMode() === 'fit') this.#fitToContainer();
-    }, 120));
-  }
+    constructor() {
+        if (instance) {
+            throw new Error('IFrameController is a singleton. Use IFrameController.getInstance() instead.');
+        }
 
-  // ==================== RESIZE HANDLES (unchanged core logic) ====================
-  #setupResizeHandles() {
-    const { left, right, bottom } = this.#elements.resizeHandles;
+        instance = this;
 
-    const startHorizontal = (e, isLeft) => {
-      e.preventDefault();
-      this.#isDragging = true;
-      this.#enableIframePointerEvents(false);
-      this.#elements.viewport.classList.add('is-dragging');
+        // Wire up state subscriptions before managers initialize
+        this.#setupStateSubscriptions();
 
-      const startX = e.clientX;
-      const startWidth = state.getViewport().width;
+        bus.on('app:managers:init', () => this.#initializeManager());
+        bus.on('app:ready', () => this.#initializeFromState());
+    }
 
-      let rafId = null;
+    /**
+     * Return the shared IFrameController instance, creating it on first call.
+     * @returns {IFrameController}
+     */
+    static getInstance() {
+        if (!instance) instance = new IFrameController();
+        return instance;
+    }
 
-      const onMove = (ev) => {
-        if (rafId) cancelAnimationFrame(rafId);
-        rafId = requestAnimationFrame(() => {
-          const delta = ev.clientX - startX;
-          const newWidth = isLeft ? startWidth - delta * 2 : startWidth + delta * 2;
-          this.#setSize(newWidth, state.getViewport().height, 'drag');
+    // ==================== PRIVATE METHODS ====================
+
+    /**
+     * Cache UIManager reference + DOM elements, then set up event listeners.
+     * Emits `iframeController:ready` when complete.
+     * @private
+     */
+    #initializeManager() {
+        this.UIManager = UIManager.getInstance();
+        this.#elements.iframe = this.UIManager.iFrame;
+
+        this.#defaults = {
+            minWidth: config.app.clamping.minWidth || this.MIN_WIDTH,
+            maxWidth: config.app.clamping.maxWidth || this.MAX_WIDTH,
+            minHeight: config.app.clamping.minHeight || this.MIN_HEIGHT,
+            maxHeight: config.app.clamping.maxHeight || this.MAX_HEIGHT,
+        };
+
+        this.#setupEventListeners();
+
+        bus.emit('iframeController:ready', {});
+    }
+
+    /**
+     * Subscribe to bus and state events that drive viewport updates.
+     * Called immediately from the constructor so state reactivity is available
+     * before `app:managers:init` fires.
+     * @private
+     */
+    #setupStateSubscriptions() {
+        bus.on('state:viewportChanged', ({ value }) => this.#applyViewportFromState(value));
+        bus.on('state:activeBreakpointChanged', ({ value }) => this.#applyBreakpointFromState(value));
+
+        // Breakpoint activated — update viewport width
+        bus.on('breakpoint:activated', (payload) => {
+            const { targetWidth } = payload || {};
+            if (typeof targetWidth !== 'number' || isNaN(targetWidth)) return;
+            state.updateViewport(targetWidth, state.getViewport().height);
         });
-      };
 
-      const onUp = () => {
-        this.#isDragging = false;
-        this.#enableIframePointerEvents(true);
-        this.#elements.viewport.classList.remove('is-dragging');
-        if (rafId) cancelAnimationFrame(rafId);
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-      };
-
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-    };
-
-    left?.addEventListener('mousedown', e => startHorizontal(e, true));
-    right?.addEventListener('mousedown', e => startHorizontal(e, false));
-
-    bottom?.addEventListener('mousedown', (e) => {
-      e.preventDefault();
-      this.#isDragging = true;
-      this.#enableIframePointerEvents(false);
-      this.#elements.viewport.classList.add('is-dragging');
-
-      const startY = e.clientY;
-      const startHeight = state.getViewport().height;
-
-      let rafId = null;
-
-      const onMove = (ev) => {
-        if (rafId) cancelAnimationFrame(rafId);
-        rafId = requestAnimationFrame(() => {
-          const delta = ev.clientY - startY;
-          const newHeight = startHeight + delta;
-          this.#setSize(state.getViewport().width, newHeight, 'drag');
+        bus.on('viewport:fit', () => { this.#fitToContainer(); });
+        bus.on('input:stepChanged', ({ target, direction, step }) => {
+            this.#handleInputStepChanged(target, direction, step);
         });
-      };
+        bus.on('input:stepCommit', ({ target }) => this.#handleInputStepCommit(target));
+    }
 
-      const onUp = () => {
-        this.#isDragging = false;
-        this.#enableIframePointerEvents(true);
-        this.#elements.viewport.classList.remove('is-dragging');
-        if (rafId) cancelAnimationFrame(rafId);
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-      };
+    /**
+     * Perform the initial fit-to-container measurement once the app is fully ready.
+     * Silent — the "RWD window is ready" toast already confirms startup.
+     * @private
+     */
+    #initializeFromState() {
+        if (!this.UIManager?.viewport) {
+            console.warn('[IFrameController] UIManager.viewport not available for initialization');
+            return;
+        }
 
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-    });
+        this.#fitToContainer({ silent: true });
+    }
 
-    // Double-click resets to fit
-    [left, right, bottom].forEach(handle => {
-      handle?.addEventListener('dblclick', () => this.#fitToContainer());
-    });
-  }
+    /**
+     * Apply a viewport object from state to the DOM (size inputs + viewport element).
+     * No-ops if UIManager is not yet initialized.
+     *
+     * @private
+     * @param {{ width:number, height:number }} viewport
+     */
+    #applyViewportFromState(viewport) {
+        if (!this.UIManager?.viewport) return;
 
-  // ==================== PUBLIC API (updated to use central state) ====================
-  static reset() {
-    IFrameController.getInstance().#fitToContainer();
-  }
+        this.UIManager.viewport.style.width = `${viewport.width}px`;
+        this.UIManager.viewport.style.height = `${viewport.height}px`;
 
-  static getCurrentSize() {
-    const viewport = state.getViewport();
-    return {
-      width: viewport.width,
-      height: viewport.height,
-      mode: state.getMode(),
-      // isMinMode will come from breakpoint logic in Stage 1
-    };
-  }
+        if (this.UIManager.widthInput) this.UIManager.widthInput.value = viewport.width;
+        if (this.UIManager.heightInput) this.UIManager.heightInput.value = viewport.height;
+    }
+
+    /**
+     * Resolve the target width from a breakpoint state change and apply it,
+     * showing a toast with the breakpoint label (and a '(Min)' suffix when in
+     * min-width mode).
+     *
+     * @private
+     * @param {object|null} breakpointData
+     */
+    #applyBreakpointFromState(breakpointData) {
+        if (!breakpointData) return;
+
+        const { breakpoint, isMinMode, targetWidth } = breakpointData;
+        let finalWidth = targetWidth;
+
+        if (typeof finalWidth !== 'number' || isNaN(finalWidth)) {
+            finalWidth = isMinMode ? breakpoint?.minWidth : breakpoint?.maxWidth;
+        }
+
+        if (typeof finalWidth !== 'number' || isNaN(finalWidth)) {
+            console.warn('[IFrameController] Could not determine valid width from breakpoint data');
+            return;
+        }
+
+        const currentHeight = state.getViewport().height || this.#defaults.minHeight;
+        state.updateViewport(finalWidth, currentHeight);
+
+        const label = breakpointData.label ?? breakpoint?.label;
+        const suffix = isMinMode ? ' (Min)' : '';
+        if (label) showToast(`${label}${suffix}`, { type: 'info', duration: 1500 });
+    }
+
+    /**
+     * Return a debounced version of `fn` that resets on every call within `delay` ms.
+     *
+     * @private
+     * @param {Function} fn
+     * @param {number}   [delay=120]
+     * @returns {Function}
+     */
+    #debounce(fn, delay = 120) {
+        return (...args) => {
+            clearTimeout(this.#debounceTimer);
+            this.#debounceTimer = setTimeout(() => fn.apply(this, args), delay);
+        };
+    }
+
+    /**
+     * Enable or disable pointer events on the iframe.
+     * Pointer events are disabled during drag operations to prevent the iframe
+     * from absorbing mouse events.
+     *
+     * @private
+     * @param {boolean} enabled
+     */
+    #enableIframePointerEvents(enabled) {
+        if (this.#elements.iframe) {
+            this.#elements.iframe.style.pointerEvents = enabled ? 'auto' : 'none';
+        }
+    }
+
+    /**
+     * Clamp and apply a new width and/or height to state.
+     * Switches mode to 'manual' and clears any active breakpoint when source
+     * is 'manual' or 'drag'.
+     *
+     * @private
+     * @param {number} width
+     * @param {number} height
+     * @param {'manual'|'drag'|string} [source='manual']
+     */
+    #setSize(width, height, source = 'manual') {
+        const w = state.clampWidth(width);
+        const h = state.clampHeight(height);
+
+        state.updateViewport(w, h);
+
+        if (source === 'manual' || source === 'drag') {
+            state.setMode('manual');
+            if (state.getActiveBreakpoint()) state.setActiveBreakpoint(null);
+        }
+    }
+
+    /**
+     * Measure `.app__window__view`, update the clamping ceilings in state, then
+     * fit the viewport to fill all available space.
+     *
+     * Emits a "Fit to Container" toast unless `silent` is true (startup /
+     * window-resize fits are silent).
+     *
+     * @private
+     * @param {object}  [options={}]
+     * @param {boolean} [options.silent=false] - Suppress the toast notification.
+     */
+    #fitToContainer({ silent = false } = {}) {
+        if (!this.UIManager?.appWindow) return;
+
+        const rect = this.UIManager.appWindow.getBoundingClientRect();
+        const width = Math.floor(rect.width);
+        const height = Math.floor(rect.height);
+
+        // Keep clamp ceilings in sync with the real available space.
+        state.setContainerWidth(width);
+        state.setContainerHeight(height);
+
+        state.setMode('fit');
+        state.setActiveBreakpoint(null);
+        state.updateViewport(width, height);
+
+        this.#clearAllDeviceActiveStates();
+        if (this.UIManager?.fitBtn) this.UIManager.fitBtn.classList.add('active');
+
+        if (!silent) showToast('Fit to Container', { type: 'info', duration: 1200 });
+    }
+
+    /**
+     * Remove the `.active` class from the fit button.
+     * Called before applying a new active state to ensure mutual exclusivity.
+     * @private
+     */
+    #clearAllDeviceActiveStates() {
+        if (this.UIManager?.fitBtn) this.UIManager.fitBtn.classList.remove('active');
+    }
+
+    /**
+     * Handle an `input:stepChanged` event by nudging the viewport by `step`
+     * pixels in the given direction.
+     *
+     * @private
+     * @param {'width'|'height'} target
+     * @param {1|-1}             direction
+     * @param {number}           step
+     */
+    #handleInputStepChanged(target, direction, step) {
+        const current = state.getViewport();
+        if (target === 'width') {
+            this.#setSize(current.width + direction * step, current.height, 'manual');
+        } else {
+            this.#setSize(current.width, current.height + direction * step, 'manual');
+        }
+    }
+
+    /**
+     * Handle an `input:stepCommit` event by reading the raw input value and
+     * applying it. '-' is treated as a fit-to-container shortcut.
+     *
+     * @private
+     * @param {'width'|'height'} target
+     */
+    #handleInputStepCommit(target) {
+        const inputEl = target === 'width'
+            ? this.UIManager.widthInput
+            : this.UIManager.heightInput;
+
+        if (!inputEl) return;
+
+        let val = inputEl.value.trim();
+        if (val === '-') {
+            this.#fitToContainer();
+            return;
+        }
+
+        let num = parseInt(val);
+        if (isNaN(num)) {
+            inputEl.value = target === 'width'
+                ? state.getViewport().width
+                : state.getViewport().height;
+            return;
+        }
+
+        if (target === 'width') {
+            this.#setSize(num, state.getViewport().height, 'manual');
+        } else {
+            this.#setSize(state.getViewport().width, num, 'manual');
+        }
+    }
+
+    /**
+     * Attach resize handle mouse events and the debounced window resize handler.
+     * @private
+     */
+    #setupEventListeners() {
+        this.#setupResizeHandles();
+
+        // Window resize — silent, not a user-initiated fit
+        window.addEventListener('resize', this.#debounce(() => {
+            if (state.getMode() === 'fit') this.#fitToContainer({ silent: true });
+        }));
+    }
+
+    /**
+     * Wire mousedown drag behaviour onto the left, right, and bottom resize
+     * handles. Double-clicking any handle triggers a fit-to-container.
+     *
+     * Horizontal handles multiply delta by 2 so the visual centre stays fixed.
+     * Pointer events on the iframe are disabled during the drag to prevent the
+     * iframe from absorbing mouse events.
+     *
+     * @private
+     */
+    #setupResizeHandles() {
+        const { left, right, bottom } = this.UIManager.resizeHandles || {};
+        const viewport = this.UIManager.viewport;
+
+        const startDrag = (e, onMove) => {
+            e.preventDefault();
+            this.#enableIframePointerEvents(false);
+            viewport?.classList.add('is-dragging');
+
+            let rafId = null;
+
+            const onMouseMove = (moveEvent) => {
+                if (rafId) cancelAnimationFrame(rafId);
+                rafId = requestAnimationFrame(() => onMove(moveEvent));
+            };
+            const onMouseUp = () => {
+                this.#enableIframePointerEvents(true);
+                viewport?.classList.remove('is-dragging');
+                if (rafId) cancelAnimationFrame(rafId);
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            };
+
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        };
+
+        right?.addEventListener('mousedown', (e) => {
+            const startX = e.clientX;
+            const startWidth = state.getViewport().width;
+            startDrag(e, (moveEvent) => {
+                this.#setSize(startWidth + (moveEvent.clientX - startX) * 2, state.getViewport().height, 'drag');
+            });
+        });
+
+        left?.addEventListener('mousedown', (e) => {
+            const startX = e.clientX;
+            const startWidth = state.getViewport().width;
+            startDrag(e, (moveEvent) => {
+                this.#setSize(startWidth - (moveEvent.clientX - startX) * 2, state.getViewport().height, 'drag');
+            });
+        });
+
+        bottom?.addEventListener('mousedown', (e) => {
+            const startY = e.clientY;
+            const startHeight = state.getViewport().height;
+            startDrag(e, (moveEvent) => {
+                this.#setSize(state.getViewport().width, startHeight + (moveEvent.clientY - startY), 'drag');
+            });
+        });
+
+        [left, right, bottom].forEach(handle => {
+            handle?.addEventListener('dblclick', () => this.#fitToContainer());
+        });
+    }
+
+    // ==================== PUBLIC API ====================
+
+    /**
+     * Fit the viewport to the container. Convenience wrapper for external callers.
+     */
+    static reset() {
+        IFrameController.getInstance().#fitToContainer();
+    }
+
+    /**
+     * Return the current viewport dimensions and mode from state.
+     * @returns {{ width:number, height:number, mode:string }}
+     */
+    static getCurrentSize() {
+        const viewport = state.getViewport();
+        return {
+            width: viewport.width,
+            height: viewport.height,
+            mode: state.getMode(),
+        };
+    }
+
+    /**
+     * Reset the singleton instance for unit tests.
+     * Only active in test environments (NODE_ENV=test or import.meta.env.TEST).
+     */
+    static resetForTesting() {
+        if (import.meta.env?.TEST || process.env.NODE_ENV === 'test') {
+            instance = null;
+        }
+    }
 }
 
-// Backward compatibility export
-export default IFrameController.getInstance();
+export default IFrameController;

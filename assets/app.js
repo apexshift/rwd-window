@@ -22,11 +22,7 @@ const FONTS_READY = (fn = () => {}) => {
  * App entry point
  * @returns {void}
  */
-const INIT = () => {
-  if(DEV_MODE) console.info('App initialized');
-
-  App.init();
-}
+const INIT = () => new App().init();
 
 window.addEventListener('load', WINDOW_LOADED);
-document.addEventListener('DOMContentLoaded', () => document.fonts.ready.then(FONTS_READY(INIT)));
+document.addEventListener('DOMContentLoaded', () => document.fonts.ready.then(() => FONTS_READY(INIT)));

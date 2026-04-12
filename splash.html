@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RWD Window — Reference</title>
+  <link rel="stylesheet" href="./assets/app.css">
+  <style>
+    body {
+      padding: var(--space-32);
+    }
+
+    .splash-header {
+      margin-bottom: var(--space-32);
+    }
+
+    .splash-header h1 {
+      font-size: var(--head-2);
+      margin: 0 0 var(--space-8) 0;
+      color: var(--theme-highlight);
+      line-height: var(--line-height-heading);
+    }
+
+    .splash-header p {
+      margin: 0;
+      color: var(--theme-grey);
+      font-size: var(--text-sm);
+    }
+
+    .splash-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .splash-table thead tr {
+      background-color: var(--theme-black);
+    }
+
+    .splash-table th {
+      text-align: left;
+      padding: var(--space-8) var(--space-12);
+      color: var(--theme-grey);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .splash-table td {
+      padding: var(--space-8) var(--space-12);
+      border-bottom: 1px solid var(--theme-slate);
+      vertical-align: middle;
+      font-size: var(--text-sm);
+    }
+
+    .splash-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .splash-table tbody tr:hover td {
+      background-color: var(--theme-slate);
+    }
+
+    .key {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.1em 0.55em;
+      background-color: var(--theme-slate);
+      border: 1px solid var(--theme-grey);
+      border-bottom-width: 2px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: var(--text-xs);
+      color: var(--theme-highlight);
+      white-space: nowrap;
+    }
+
+    .ui-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-8);
+      color: var(--theme-concrete);
+      font-size: var(--text-xs);
+    }
+
+    .ui-badge img {
+      width: 1.8rem;
+      height: 1.8rem;
+      opacity: 0.75;
+    }
+
+    .muted {
+      color: var(--theme-grey);
+    }
+
+    .range {
+      color: var(--theme-highlight);
+      font-size: var(--text-xs);
+      opacity: 0.75;
+    }
+
+    .tag-min {
+      color: var(--theme-active);
+    }
+  </style>
+</head>
+<body>
+
+  <header class="splash-header">
+    <h1>RWD Window</h1>
+    <p>Responsive Web Design viewport testing tool. Load a project file and use the controls below to test responsive layouts.</p>
+  </header>
+
+  <table class="splash-table">
+    <thead>
+      <tr>
+        <th>Action</th>
+        <th>UI Element</th>
+        <th>Shortcut</th>
+        <th>Extension(s)</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <tr>
+        <td>Fit to Container</td>
+        <td><span class="ui-badge"><img src="./assets/svg/ui-fit-to-container-icon-dol.svg" alt="Fit to Container"> Fit button</span></td>
+        <td><kbd class="key">F</kbd></td>
+        <td class="muted">—</td>
+      </tr>
+
+      <tr>
+        <td>Resize Width</td>
+        <td><span class="ui-badge">W input &amp; step buttons</span></td>
+        <td><kbd class="key">←</kbd> <kbd class="key">→</kbd></td>
+        <td><kbd class="key">+Shift</kbd> ×10 &nbsp; <kbd class="key">+Ctrl</kbd> ×50</td>
+      </tr>
+
+      <tr>
+        <td>Resize Height</td>
+        <td><span class="ui-badge">H input &amp; step buttons</span></td>
+        <td><kbd class="key">↑</kbd> <kbd class="key">↓</kbd></td>
+        <td><kbd class="key">+Shift</kbd> ×10 &nbsp; <kbd class="key">+Ctrl</kbd> ×50</td>
+      </tr>
+
+      <tr>
+        <td>Toggle Height Clamp</td>
+        <td class="muted">—</td>
+        <td><kbd class="key">H</kbd></td>
+        <td class="muted">—</td>
+      </tr>
+
+      <tr>
+        <td>Cycle Breakpoints</td>
+        <td><span class="ui-badge">Breakpoint buttons</span></td>
+        <td><kbd class="key">Tab</kbd></td>
+        <td><kbd class="key">+Shift</kbd> reverse</td>
+      </tr>
+
+      <tr>
+        <td>Mobile Portrait <span class="range">320–477px</span></td>
+        <td><span class="ui-badge"><img src="./assets/svg/ui-mobile-portrait-icon-dol.svg" alt="Mobile Portrait"> Mobile Portrait</span></td>
+        <td><kbd class="key">1</kbd></td>
+        <td>2nd press = <span class="tag-min">min-width</span></td>
+      </tr>
+
+      <tr>
+        <td>Mobile Landscape <span class="range">478–767px</span></td>
+        <td><span class="ui-badge"><img src="./assets/svg/ui-mobile-landscape-icon-dol.svg" alt="Mobile Landscape"> Mobile Landscape</span></td>
+        <td><kbd class="key">2</kbd></td>
+        <td>2nd press = <span class="tag-min">min-width</span></td>
+      </tr>
+
+      <tr>
+        <td>Tablet Portrait <span class="range">768–991px</span></td>
+        <td><span class="ui-badge"><img src="./assets/svg/ui-tablet-portrait-icon-dol.svg" alt="Tablet Portrait"> Tablet Portrait</span></td>
+        <td><kbd class="key">3</kbd></td>
+        <td>2nd press = <span class="tag-min">min-width</span></td>
+      </tr>
+
+      <tr>
+        <td>Laptop <span class="range">992–1279px</span></td>
+        <td><span class="ui-badge"><img src="./assets/svg/ui-laptop-icon-dol.svg" alt="Laptop"> Laptop</span></td>
+        <td><kbd class="key">4</kbd></td>
+        <td>2nd press = <span class="tag-min">min-width</span></td>
+      </tr>
+
+      <tr>
+        <td>Desktop <span class="range">1280–1920px</span></td>
+        <td><span class="ui-badge"><img src="./assets/svg/ui-desktop-icon-dol.svg" alt="Desktop"> Desktop</span></td>
+        <td><kbd class="key">5</kbd></td>
+        <td>2nd press = <span class="tag-min">min-width</span></td>
+      </tr>
+
+      <tr>
+        <td>Clear Mode</td>
+        <td class="muted">—</td>
+        <td><kbd class="key">Esc</kbd></td>
+        <td class="muted">—</td>
+      </tr>
+
+      <tr>
+        <td>Keyboard Help</td>
+        <td><span class="ui-badge"><img src="./assets/svg/ui-info-icon-dol.svg" alt="Help"> Help button</span></td>
+        <td><kbd class="key">?</kbd></td>
+        <td class="muted">—</td>
+      </tr>
+
+    </tbody>
+  </table>
+
+</body>
+</html>
