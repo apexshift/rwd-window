@@ -15,6 +15,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - Unreleased
+
+### Added
+- **LocalStorage persistence** — viewport size, mode, active breakpoint, and current demo are automatically saved and restored across sessions. Controlled by the new `persistence` section in `config.json` (`enabled`, `storageKey`, `keysToPersist`).
+- **"Reset" button** in the masthead (alongside the Fit button) — clears all persisted state and reloads the app to factory defaults.
+- `AppState.saveToStorage()` — writes configured state keys to localStorage immediately.
+- `AppState.loadFromStorage()` — reads and validates persisted state on startup; invalid or missing keys fall back to defaults silently.
+- `AppState.reset()` — clears localStorage and resets all state values to defaults.
+
+### Changed
+- `App.js` now calls `state.loadFromStorage()` as phase 0, before any manager is instantiated, so persisted state is in place before the DOM is built.
+- `IFrameController.#initializeFromState()` now respects the persisted mode — only fits to container when mode is `fit`; otherwise applies persisted dimensions (clamped to live container bounds).
+- `LocalLoader.populateSelect()` now restores the persisted demo and applies it to the iframe on startup.
+- `BreakpointManager.#initializeUI()` now syncs button active states from persisted state immediately after creating buttons.
+
+---
+
 ## [1.0.0] - 2026-04-12
 
 First stable production release. This version represents a complete architectural overhaul from the beta, establishing a clean event-driven foundation with full test coverage, comprehensive JSDoc, and a polished user experience.

@@ -2,9 +2,9 @@
  * @module App
  * @description Main orchestrator for RWD Window.
  *
- * Wires together all manager singletons and drives the five-phase
- * initialization sequence:
+ * Wires together all manager singletons and drives the initialization sequence:
  *
+ * 0. Restore persisted state from localStorage (before any manager exists).
  * 1. Register completion listeners on the EventBus.
  * 2. Instantiate all manager singletons (they self-register via the bus).
  * 3. Emit `app:init` to start UIManager's DOM construction.
@@ -46,6 +46,9 @@ export class App {
    */
   init() {
     try {
+      // === PHASE 0: Restore persisted state before anything else ===
+      state.loadFromStorage();
+
       // === PHASE 1: Setup completion listeners ===
       bus.on('ui:ready', () => this.#onUIReady());
       bus.on('breakpoints:ready', () => this.#onManagerReady('breakpoints'));
@@ -59,6 +62,12 @@ export class App {
       });
       bus.on('ui:error', ({ message }) => {
         showError(`UI Error: ${message}`, { duration: 5000 });
+      });
+
+      // Reset to defaults — clears storage and reloads for a clean state
+      bus.on('ui:resetClicked', () => {
+        state.reset();
+        window.location.reload();
       });
 
       // === PHASE 2: Instantiate singletons (they register themselves) ===

@@ -177,16 +177,14 @@ export class LocalLoader {
             selectEl.appendChild(option);
         });
 
-        /* Restore from state, or auto-load first file
+        // Restore the persisted demo and update the iframe to match.
+        // state:currentDemoChanged only fires on changes, so we apply the iframe
+        // src directly here since the value was already set during loadFromStorage.
         const current = state.getCurrentDemo();
-        if (current) {
+        if (current && current !== '') {
             selectEl.value = current;
-        } else if (this.#files.length > 0) {
-            const firstFile = this.#files[0];
-            selectEl.value = firstFile.value;
-            state.setCurrentDemo(firstFile.value);
-            bus.emit('demo:changed', { value: firstFile.value });
-        } */
+            this.#updateIframeFromDemo(current);
+        }
     }
 }
 

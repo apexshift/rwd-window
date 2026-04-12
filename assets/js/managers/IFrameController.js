@@ -125,13 +125,39 @@ export class IFrameController {
     }
 
     /**
-     * Perform the initial fit-to-container measurement once the app is fully ready.
-     * Silent — the "RWD window is ready" toast already confirms startup.
+     * Apply the initial viewport on startup, respecting any persisted state.
+     *
+     * - `fit` mode (or no persistence): measure the container and fit as before.
+     * - `manual` / `device` mode: measure container ceilings first so clamping is
+     *   correct, then re-apply the persisted viewport dimensions directly.
+     *
+     * The module docstring note "3. `app:ready` → measures the container and fits"
+     * remains true for the default (fit) path.
      * @private
      */
     #initializeFromState() {
         if (!this.UIManager?.viewport) {
             console.warn('[IFrameController] UIManager.viewport not available for initialization');
+            return;
+        }
+
+        const mode = state.getMode();
+
+        if (mode !== 'fit') {
+            // Update clamping ceilings from the live container before applying
+            // persisted dimensions so values are bounded correctly.
+            if (this.UIManager.appWindow) {
+                const rect = this.UIManager.appWindow.getBoundingClientRect();
+                state.setContainerWidth(Math.floor(rect.width));
+                state.setContainerHeight(Math.floor(rect.height));
+            }
+
+            // Remove the fit-button active class that UIFactory adds by default.
+            if (this.UIManager?.fitBtn) this.UIManager.fitBtn.classList.remove('active');
+
+            // Re-apply the persisted viewport (clamped to live container bounds).
+            const viewport = state.getViewport();
+            state.updateViewport(viewport.width, viewport.height);
             return;
         }
 

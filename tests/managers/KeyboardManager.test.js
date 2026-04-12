@@ -135,6 +135,17 @@ describe('KeyboardManager', () => {
         expect(state.getActiveBreakpoint()).toBeNull();
     });
 
+    // ── R key ─────────────────────────────────────────────────────────────────
+
+    /**
+     * @description Pressing R should emit ui:resetClicked on the bus.
+     */
+    it('R key — emits ui:resetClicked', () => {
+        const spy = vi.spyOn(bus, 'emit');
+        fireKey('r');
+        expect(spy).toHaveBeenCalledWith('ui:resetClicked');
+    });
+
     // ── focus guard ───────────────────────────────────────────────────────────
 
     /**

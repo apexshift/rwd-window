@@ -130,6 +130,186 @@ describe('AppState — setContainerHeight', () => {
     });
 });
 
+describe('AppState — persistence', () => {
+    beforeEach(() => {
+        bus.resetForTesting();
+        localStorage.clear();
+        vi.useFakeTimers();
+        vi.clearAllTimers(); // discard any stale timers carried from previous tests
+        // Restore default clamping so viewport assertions are predictable
+        state.setContainerWidth(1920);
+        state.setContainerHeight(1080);
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+        localStorage.clear();
+    });
+
+    // ── saveToStorage ─────────────────────────────────────────────────────────
+
+    /**
+     * @description saveToStorage should write configured state keys to localStorage.
+     */
+    it('saveToStorage — writes configured keys to localStorage', () => {
+        state.setMode('manual');
+        state.updateViewport(800, 700);
+        state.saveToStorage();
+
+        const raw = localStorage.getItem('rwd-window-state');
+        expect(raw).not.toBeNull();
+        const stored = JSON.parse(raw);
+        expect(stored.mode).toBe('manual');
+        expect(stored.viewport.width).toBe(state.getViewport().width);
+        expect(stored.viewport.height).toBe(state.getViewport().height);
+    });
+
+    // ── loadFromStorage ───────────────────────────────────────────────────────
+
+    /**
+     * @description loadFromStorage should restore all valid persisted keys.
+     */
+    it('loadFromStorage — restores valid viewport, mode, activeBreakpoint, and currentDemo', () => {
+        const snapshot = {
+            mode: 'device',
+            viewport: { width: 800, height: 700 },
+            activeBreakpoint: { label: 'Tablet', minWidth: 481, maxWidth: 768 },
+            currentDemo: './demos/one.html'
+        };
+        localStorage.setItem('rwd-window-state', JSON.stringify(snapshot));
+
+        state.loadFromStorage();
+
+        expect(state.getMode()).toBe('device');
+        expect(state.getViewport().width).toBe(800);
+        expect(state.getViewport().height).toBe(700);
+        expect(state.getActiveBreakpoint()?.label).toBe('Tablet');
+        expect(state.getCurrentDemo()).toBe('./demos/one.html');
+    });
+
+    /**
+     * @description loadFromStorage should skip a persisted mode that is not a valid enum value.
+     */
+    it('loadFromStorage — skips invalid mode value', () => {
+        state.setMode('manual');
+        localStorage.setItem('rwd-window-state', JSON.stringify({ mode: 'bogus' }));
+
+        state.loadFromStorage();
+
+        expect(state.getMode()).toBe('manual');
+    });
+
+    /**
+     * @description loadFromStorage should skip a viewport where width or height is not a number.
+     */
+    it('loadFromStorage — skips malformed viewport', () => {
+        state.updateViewport(800, 700);
+        const before = state.getViewport();
+        localStorage.setItem('rwd-window-state', JSON.stringify({ viewport: { width: 'bad', height: 700 } }));
+
+        state.loadFromStorage();
+
+        expect(state.getViewport()).toEqual(before);
+    });
+
+    /**
+     * @description loadFromStorage should silently no-op when storage is empty.
+     */
+    it('loadFromStorage — no-ops when localStorage is empty', () => {
+        state.setMode('manual');
+        state.loadFromStorage();
+        expect(state.getMode()).toBe('manual');
+    });
+
+    /**
+     * @description loadFromStorage should handle corrupt JSON without throwing.
+     */
+    it('loadFromStorage — handles corrupt JSON gracefully', () => {
+        state.setMode('manual');
+        localStorage.setItem('rwd-window-state', 'not-valid-json{{{');
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+        expect(() => state.loadFromStorage()).not.toThrow();
+        expect(state.getMode()).toBe('manual');
+
+        warn.mockRestore();
+    });
+
+    /**
+     * @description loadFromStorage should not trigger auto-save during the load pass.
+     */
+    it('loadFromStorage — does not trigger auto-save during load', () => {
+        localStorage.setItem('rwd-window-state', JSON.stringify({ mode: 'fit' }));
+        const saveSpy = vi.spyOn(state, 'saveToStorage');
+
+        state.loadFromStorage();
+        vi.runAllTimers();
+
+        expect(saveSpy).not.toHaveBeenCalled();
+    });
+
+    // ── reset ─────────────────────────────────────────────────────────────────
+
+    /**
+     * @description reset should remove the persisted storage entry.
+     */
+    it('reset — clears localStorage', () => {
+        state.saveToStorage();
+        expect(localStorage.getItem('rwd-window-state')).not.toBeNull();
+
+        state.reset();
+
+        expect(localStorage.getItem('rwd-window-state')).toBeNull();
+    });
+
+    /**
+     * @description reset should restore all state keys to their default values.
+     */
+    it('reset — restores default state values', () => {
+        state.setMode('device');
+        state.setCurrentDemo('./demos/one.html');
+
+        state.reset();
+
+        expect(state.getMode()).toBe('manual');
+        expect(state.getActiveBreakpoint()).toBeNull();
+        expect(state.getCurrentDemo()).toBe('');
+    });
+
+    // ── auto-save ─────────────────────────────────────────────────────────────
+
+    /**
+     * @description A state change should write to localStorage once the debounce
+     * timer fires. Nothing is written before timers run.
+     */
+    it('set() — auto-save writes state to localStorage after a change', () => {
+        state.setMode('fit');
+
+        // Timer not yet elapsed — storage still empty (beforeEach cleared it)
+        expect(localStorage.getItem('rwd-window-state')).toBeNull();
+
+        vi.runAllTimers();
+
+        const stored = JSON.parse(localStorage.getItem('rwd-window-state'));
+        expect(stored?.mode).toBe('fit');
+    });
+
+    /**
+     * @description Rapid successive changes should batch into a single write
+     * whose value reflects the final state, not intermediate states.
+     */
+    it('set() — rapid changes batch into one write with the final value', () => {
+        state.setMode('fit');
+        state.setMode('manual');
+        state.setMode('device');
+
+        vi.runAllTimers();
+
+        const stored = JSON.parse(localStorage.getItem('rwd-window-state'));
+        expect(stored?.mode).toBe('device');
+    });
+});
+
 describe('AppState — reactive state', () => {
     beforeEach(() => {
         bus.resetForTesting();

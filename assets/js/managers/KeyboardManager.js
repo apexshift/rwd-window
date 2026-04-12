@@ -12,6 +12,7 @@
  * - `Tab/Shift+Tab` Cycle breakpoints forward/backward
  * - `H`             Toggle between config minHeight and live container height
  * - `F`             Fit to container
+ * - `R`             Reset to defaults (clears persistence and reloads)
  * - `Esc`           Clear current mode
  * - `?`             Toggle splash.html (keyboard reference) in the viewport iframe — restores previous src on second press
  *
@@ -97,6 +98,10 @@ export class KeyboardManager {
                 case 'f':
                     this.#triggerFit();
                     e.preventDefault();
+                    break;
+
+                case 'r':
+                    bus.emit('ui:resetClicked');
                     break;
 
                 case 'escape':

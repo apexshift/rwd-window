@@ -194,6 +194,22 @@ export class UIFactory {
   }
 
   /**
+   * Create the "Reset to Defaults" button. Emits `ui:resetClicked` on the
+   * EventBus when clicked so App.js can clear storage and reload.
+   *
+   * @param {string} label - Accessible label / button text.
+   * @returns {HTMLButtonElement}
+   */
+  static createResetButton(label, icon = "") {
+    const button = this.createButton(label, icon);
+    button.title = 'Reset to Defaults (R)';
+    button.dataset.action = 'reset';
+    button.setAttribute('aria-label', 'Reset to Defaults');
+    button.addEventListener('click', () => bus.emit('ui:resetClicked'));
+    return button;
+  }
+
+  /**
    * Create a labelled `<select>` element populated by LocalLoader.
    * Changes to the select emit `demo:changed` on the EventBus and update
    * AppState via `state.setCurrentDemo()`.

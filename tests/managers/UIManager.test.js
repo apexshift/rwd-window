@@ -7,6 +7,7 @@ vi.mock('../../config.json', () => ({
         ui_controls: {
             fitToContainer: { label: 'Fit', icon: '' },
             help:           { label: 'Help', icon: '' },
+            reset:          { label: 'Reset', icon: '' },
             breakpoints:    [],
         },
         files: []

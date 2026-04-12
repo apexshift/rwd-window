@@ -14,6 +14,7 @@ vi.mock('../../config.json', () => ({
 
 import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest';
 import { LocalLoader } from '../../assets/js/managers/LocalLoader.js';
+import UIManager from '../../assets/js/managers/UIManager.js';
 import { bus } from '../../assets/js/core/EventBus.js';
 import { state } from '../../assets/js/core/AppState.js';
 
@@ -123,6 +124,47 @@ describe('LocalLoader', () => {
         loader.handleDemoChange('./demos/one.html');
         expect(state.getCurrentDemo()).toBe('./demos/one.html');
         expect(spy).toHaveBeenCalledWith('demo:changed', { value: './demos/one.html' });
+    });
+
+    // ── populateSelect — persistence restore ──────────────────────────────────
+
+    /**
+     * @description populateSelect should apply the persisted demo to the iframe
+     * when state has a non-empty currentDemo on startup.
+     */
+    it('populateSelect — restores persisted demo to the iframe', () => {
+        const select = document.createElement('select');
+        select.innerHTML = `
+            <option value="./demos/one.html">Demo One</option>
+            <option value="./demos/two.html">Demo Two</option>
+        `;
+        vi.spyOn(UIManager, 'getInstance').mockReturnValue({ fileSelect: select });
+
+        const mockIframe = { src: '' };
+        vi.spyOn(document, 'querySelector').mockReturnValue(mockIframe);
+
+        state.setCurrentDemo('./demos/two.html');
+        loader.populateSelect();
+
+        expect(select.value).toBe('./demos/two.html');
+        expect(mockIframe.src).toBe('./demos/two.html');
+    });
+
+    /**
+     * @description populateSelect should leave the iframe unchanged when currentDemo is empty.
+     */
+    it('populateSelect — does not update iframe when currentDemo is empty', () => {
+        const select = document.createElement('select');
+        select.innerHTML = `<option value="./demos/one.html">Demo One</option>`;
+        vi.spyOn(UIManager, 'getInstance').mockReturnValue({ fileSelect: select });
+
+        const mockIframe = { src: 'original' };
+        vi.spyOn(document, 'querySelector').mockReturnValue(mockIframe);
+
+        state.setCurrentDemo('');
+        loader.populateSelect();
+
+        expect(mockIframe.src).toBe('original');
     });
 
     // ── iframe src update ─────────────────────────────────────────────────────

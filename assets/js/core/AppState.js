@@ -25,11 +25,25 @@ export class AppState {
     currentDemo: ''
   };
 
+  /** @private Default state — used by {@link AppState#reset} to restore original values. */
+  static #defaults = {
+    viewport: { width: 1920, height: 1080 },
+    mode: 'manual',
+    activeBreakpoint: null,
+    currentDemo: ''
+  };
+
   /**
    * @private
    * @type {{ minWidth:number, maxWidth:number, minHeight:number, maxHeight:number }}
    */
   #clamping = { ...config.app.clamping };
+
+  /** @private @type {ReturnType<typeof setTimeout>|null} Debounce timer for auto-save. */
+  #saveTimer = null;
+
+  /** @private @type {boolean} Suppresses auto-save during {@link AppState#loadFromStorage}. */
+  #loading = false;
 
   /**
    * Return the shared AppState instance, creating it on first call.
@@ -132,6 +146,7 @@ export class AppState {
   /**
    * Set a state value and emit `state:<key>Changed` only when the new value
    * differs from the current one (deep equality via JSON.stringify).
+   * Schedules a debounced auto-save after any change (suppressed during load).
    *
    * @param {string} key
    * @param {*}      value
@@ -141,6 +156,109 @@ export class AppState {
     if (JSON.stringify(oldValue) === JSON.stringify(value)) return;
     this.#state[key] = value;
     bus.emit(`state:${key}Changed`, { key, value, previous: oldValue });
+    if (!this.#loading) this.#scheduleSave();
+  }
+
+  /**
+   * Schedule a debounced save to localStorage (300 ms).
+   * Batches rapid sequential state changes into a single write.
+   * No-ops if persistence is disabled in config.
+   * @private
+   */
+  #scheduleSave() {
+    if (!config.persistence?.enabled) return;
+    clearTimeout(this.#saveTimer);
+    this.#saveTimer = setTimeout(() => this.saveToStorage(), 300);
+  }
+
+  /**
+   * Persist the configured state keys to localStorage immediately.
+   * Silently no-ops if persistence is disabled or localStorage is unavailable.
+   */
+  saveToStorage() {
+    if (!config.persistence?.enabled) return;
+    const { storageKey, keysToPersist } = config.persistence;
+    const snapshot = {};
+    for (const key of keysToPersist) {
+      snapshot[key] = this.#state[key];
+    }
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(snapshot));
+    } catch {
+      console.warn('[AppState] Could not save to localStorage (quota exceeded or disabled).');
+    }
+  }
+
+  /**
+   * Restore persisted state from localStorage.
+   * Each key is validated before being applied; invalid or missing keys are
+   * silently skipped so the app always starts in a coherent state.
+   * Auto-save is suppressed during loading to avoid redundant writes.
+   */
+  loadFromStorage() {
+    if (!config.persistence?.enabled) return;
+    const { storageKey, keysToPersist } = config.persistence;
+    let stored;
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return;
+      stored = JSON.parse(raw);
+    } catch {
+      console.warn('[AppState] Could not read or parse localStorage state.');
+      return;
+    }
+
+    this.#loading = true;
+    for (const key of keysToPersist) {
+      if (!(key in stored)) continue;
+      const value = stored[key];
+      if (!this.#isValidStateValue(key, value)) continue;
+      this.set(key, value);
+    }
+    this.#loading = false;
+  }
+
+  /**
+   * Validate that a value is safe to restore for the given state key.
+   * @private
+   * @param {string} key
+   * @param {*} value
+   * @returns {boolean}
+   */
+  #isValidStateValue(key, value) {
+    switch (key) {
+      case 'viewport':
+        return value !== null && typeof value === 'object'
+          && typeof value.width === 'number' && typeof value.height === 'number';
+      case 'mode':
+        return ['manual', 'fit', 'device'].includes(value);
+      case 'activeBreakpoint':
+        return value === null || (typeof value === 'object' && typeof value.label === 'string');
+      case 'currentDemo':
+        return typeof value === 'string';
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Clear localStorage and reset all state to default values.
+   * Emits `state:<key>Changed` for each key that actually changes.
+   * Called when the user clicks "Reset to Defaults".
+   */
+  reset() {
+    if (config.persistence?.enabled) {
+      try {
+        localStorage.removeItem(config.persistence.storageKey);
+      } catch {
+        console.warn('[AppState] Could not clear localStorage.');
+      }
+    }
+    this.#loading = true;
+    for (const [key, value] of Object.entries(AppState.#defaults)) {
+      this.set(key, value);
+    }
+    this.#loading = false;
   }
 
   /**

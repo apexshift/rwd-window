@@ -112,6 +112,14 @@ export class BreakpointManager {
             button.addEventListener('dblclick', (e) => { e.stopImmediatePropagation(); this.#resetToFit(); });
             this.#buttonContainer.appendChild(button);
         });
+
+        // Sync button active state from persisted state now that buttons exist.
+        const activeBp = state.getActiveBreakpoint();
+        if (activeBp) {
+            this.#syncActiveButtonVisuals(activeBp);
+        } else {
+            this.#syncButtonVisualsForWidth(state.getViewport().width);
+        }
     }
 
     /**

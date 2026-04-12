@@ -132,7 +132,12 @@ export class UIManager {
             config.ui_controls.fitToContainer.label,
             config.ui_controls.fitToContainer.icon
         );
+        const resetBtn = UIFactory.createResetButton(
+            config.ui_controls.reset.label,
+            config.ui_controls.reset.icon
+        );
         fitContainer.appendChild(fitBtn);
+        fitContainer.appendChild(resetBtn);
         masthead.appendChild(fitContainer);
 
         const deviceContainer = UIFactory.createControlsContainer('devices');
@@ -169,6 +174,7 @@ export class UIManager {
         bus.emit("ui:registerElement", {});
         this.#addElement('masthead', null, false);           // already set in #createUI
         this.#addElement('fitBtn', '[data-mode="fit"]');
+        this.#addElement('resetBtn', '[data-action="reset"]');
         this.#addElement('deviceContainer', '#devices');
         this.#addElement('dimensionsContainer', '#dimensions');
         this.#addElement('loaderContainer', '#loader');

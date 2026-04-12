@@ -52,7 +52,16 @@
         "help": {
             "label": "Help",
             "icon": "./assets/svg/ui-info-icon-dol.svg"
+        },
+        "reset": {
+            "label": "Reset",
+            "icon": "./assets/svg/ui-reset-icon-dol.svg"
         }
+    },
+    "persistence": {
+        "enabled": true,
+        "storageKey": "rwd-window-state",
+        "keysToPersist": ["viewport", "mode", "activeBreakpoint", "currentDemo"]
     },
     "files": [
         {
