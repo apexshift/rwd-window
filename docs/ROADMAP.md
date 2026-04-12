@@ -51,44 +51,7 @@ Make RWD Window feel faster and more convenient for daily use while staying ligh
 **Estimated Effort:** 3–5 hours
 
 ---
-#### Feature 3 - Config Unification (Single `config.json`)
-
-**Purpose:** Simplify customization for users.
-
-**Proposed Value:** One file to edit instead of three — reduces confusion.
-
-**Micro-Tasks:**
-1. Create new unified `config.json` structure that combines:
-  - breakpoints
-  - demos (file-loader)
-  - clamping + initialViewport
-  - ui_controls (labels, icons)
-2. Update `AppState.js`, `LocalLoader.js`, `BreakpointManager.js`, and `UIFactory.js` to read from the new single file.
-3. Add graceful fallback for old separate config files (one release only).
-4. Update README “Customization” section with new structure and examples.
-5. Test loading with malformed config and missing sections.
-
-**Estimated Effort:** 5–7 hours
-
----
-#### Feature 4 - Keyboard Shortcuts Overlay
-
-**Purpose:** Make shortcuts discoverable.
-
-**Proposed Value:** Lowers barrier for power users and reduces documentation dependency.
-
-**Micro-Tasks:**
-
-1. Create a clean modal/dialog component using UIFactory (or extend UIManager).
-2. Add `?` key listener in `KeyboardManager.js` to toggle the overlay.
-3. Populate overlay with a readable table of all shortcuts.
-4. Make overlay dismissible with Esc and/or click outside.
-4. Add a small “?” help button in the masthead.
-
-**Estimated Effort:** 4–6 hours
-
----
-#### Feature 5 - Orientation Toggle
+#### Feature 3 - Orientation Toggle
 
 **Purpose:** Quick portrait ↔ landscape switch for active breakpoint.
 
@@ -103,7 +66,7 @@ Make RWD Window feel faster and more convenient for daily use while staying ligh
 **Estimated Effort:** 3–4 hours
 
 ---
-#### Feature 6 - Quick Reset Button + Live Dimensions Readout
+#### Feature 4 - Quick Reset Button + Live Dimensions Readout
 
 **Purpose:** One-click full reset and always-visible current size.
 
@@ -121,12 +84,10 @@ Make RWD Window feel faster and more convenient for daily use while staying ligh
 ### Recommended Implementation Order (v1.1.0)
 - LocalStorage Persistence ← Start here (biggest daily win)
 - Improved Feedback & Visual Polish
-- Config Unification
-- Keyboard Shortcuts Overlay
 - Orientation Toggle
 - Quick Reset + Live Dimensions
 
-**Total Estimated Effort:** 25–35 hours (spread over time)
+**Total Estimated Effort:** 12–18 hours (spread over time)
 
 ---
 ### Success Criteria for v1.1.0 Release
