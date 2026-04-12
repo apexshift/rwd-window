@@ -1,0 +1,13 @@
+{
+    "clamping": {
+        "minWidth": 320,
+        "maxWidth": 1920,
+        "minHeight": 640,
+        "maxHeight": 1080
+    },
+    "defaultBehavior": "clamp",
+    "initialViewport": {
+        "width": 1920,
+        "height": 1080
+    } 
+}
