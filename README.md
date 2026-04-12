@@ -131,10 +131,11 @@ npm test
 
 102 tests across 9 suites using Vitest with happy-dom. All managers, core modules, and utilities are covered.
 
-## Roadmap
+## Documentation
 
-- Orientation toggle (restricted to mobile/tablet breakpoints, config-driven)
-- Configurable clamping limits UI
-- Visual overlays (container identification, grid lines, outline mode, x-ray mode)
-- LocalStorage persistence
-- Export current viewport state
+For detailed information, please refer to:
+
+- **[Roadmap](docs/ROADMAP.md)** — Planned features and development direction for future versions.
+- **[Changelog](docs/CHANGELOG.md)** — Complete version history and release notes.
+
+---
