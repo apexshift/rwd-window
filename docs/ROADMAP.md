@@ -1,7 +1,7 @@
 # Roadmap Implementation Plan 
 We will execute this one feature at a time, with clear micro-tasks, so you can implement, test, and confirm completion before moving to the next. This keeps quality high and cognitive load low.
 
-**Current Version:** v1.0.0
+**Current Version:** v1.0.0 → v1.1.0 in progress
 
 ## Roadmap to [v1.1.0]
 Make RWD Window feel faster and more convenient for daily use while staying lightweight and true to the minimalist philosophy.
@@ -9,31 +9,7 @@ Make RWD Window feel faster and more convenient for daily use while staying ligh
 **Prioritized Feature Breakdown with Micro-Tasks**
 
 ---
-#### Feature 1 - LocalStorage Persistence (Highest Value – Do This First)
-
-**Purpose:** Remember last demo, viewport size, mode, and active breakpoint across sessions.
-
-**Proposed Value:** Eliminates repetitive setup every time you open the tool — biggest daily time saver.
-
-**Micro-Tasks (in order):**
-1. Add `persistence` section to `config.json` with `enabled: true` and `keysToPersist` array.
-2. Extend `AppState.js` with:
-  - `saveToStorage()` method
-  - `loadFromStorage()` method
-  - Automatic save on any `state:xxxChanged` event (debounced)
-3. In `App.js`:
-  - Call `loadFromStorage()` early in `init()`
-  - Call `saveToStorage()` after `app:ready`
-4. Add a visible **“Reset to Defaults”** button in the masthead (using UIFactory + UIManager).
-5. Update `AppState.reset()` to also clear LocalStorage.
-6. Add basic error handling if LocalStorage is disabled/quota exceeded.
-7. pdate README with a short section explaining persistence behavior.
-8. Add entry to CHANGELOG.md for v1.1.0.
-
-**Estimated Effort:** 4–6 hours
-
----
-#### Feature 2 - Improved Feedback & Visual Polish
+#### Feature 1 - Improved Feedback & Visual Polish
 
 **Purpose:** Clearly communicate current state (active breakpoint + min/max mode).
 
@@ -51,7 +27,7 @@ Make RWD Window feel faster and more convenient for daily use while staying ligh
 **Estimated Effort:** 3–5 hours
 
 ---
-#### Feature 3 - Orientation Toggle
+#### Feature 2 - Orientation Toggle
 
 **Purpose:** Quick portrait ↔ landscape switch for active breakpoint.
 
@@ -66,28 +42,27 @@ Make RWD Window feel faster and more convenient for daily use while staying ligh
 **Estimated Effort:** 3–4 hours
 
 ---
-#### Feature 4 - Quick Reset Button + Live Dimensions Readout
+#### Feature 3 - Live Dimensions Readout
 
-**Purpose:** One-click full reset and always-visible current size.
+**Purpose:** Always-visible current viewport size during drag and manual input.
 
-**Proposed Value:** Faster context switching and precise size awareness.
+**Proposed Value:** Precise size awareness without needing to focus the W/H inputs.
 
 **Micro-Tasks:**
-1. Add “Reset All” button in masthead.
-2. Add small live pixel readout next to W/H inputs (updates during drag).
-3. Wire both to AppState and EventBus.
+1. Add small live pixel readout next to W/H inputs (updates during drag).
+2. Wire to `state:viewportChanged` via EventBus.
 
-**Estimated Effort:** 2–3 hours
+**Estimated Effort:** 1–2 hours
 
 ---
 
 ### Recommended Implementation Order (v1.1.0)
-- LocalStorage Persistence ← Start here (biggest daily win)
+- ~~LocalStorage Persistence~~ ✅ Complete
 - Improved Feedback & Visual Polish
 - Orientation Toggle
-- Quick Reset + Live Dimensions
+- Live Dimensions Readout
 
-**Total Estimated Effort:** 12–18 hours (spread over time)
+**Total Estimated Effort:** 8–11 hours remaining
 
 ---
 ### Success Criteria for v1.1.0 Release
@@ -100,5 +75,4 @@ Make RWD Window feel faster and more convenient for daily use while staying ligh
 - Orientation toggle (restricted to mobile/tablet breakpoints, config-driven)
 - Configurable clamping limits UI
 - Visual overlays (container identification, grid lines, outline mode, x-ray mode)
-- LocalStorage persistence
 - Export current viewport state

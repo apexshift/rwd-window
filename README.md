@@ -12,6 +12,8 @@ A lightweight, desktop-only responsive viewport simulator for rapid frontend pro
 - Fit to Container mode — always measures real available space, correct on any screen size
 - Dynamic input ceilings — `max` on width and height inputs updates in real time to match the live container
 - Local and remote demo loading via dropdown
+- **LocalStorage persistence** — viewport size, mode, active breakpoint, and current demo are saved and restored automatically across sessions
+- **Reset to Defaults** button and `R` shortcut — clears persisted state and reloads the app
 - Toast notifications for user feedback (replaces static feedback label)
 - Splash screen (`splash.html`) — full keyboard and UI reference loaded directly in the viewport
 - Keyboard shortcuts:
@@ -20,11 +22,12 @@ A lightweight, desktop-only responsive viewport simulator for rapid frontend pro
   - `Tab` / `Shift+Tab` to cycle breakpoints
   - `H` to toggle between min and max height clamp
   - `F` for Fit to Container
+  - `R` to Reset to Defaults (clears persistence and reloads)
   - `Esc` to clear current mode
   - `?` / `Shift+/` to load the splash reference page (second press restores previous content)
 - Shortcut tooltips on all buttons
 - Centralized configuration in `config.json`
-- Full test suite — 102 tests across 9 suites (Vitest + happy-dom)
+- Full test suite — 116 tests across 9 suites (Vitest + happy-dom)
 
 ## Configuration (`config.json`)
 
@@ -38,7 +41,13 @@ The project uses a single `config.json` file at the root:
   "ui_controls": {
     "fitToContainer": { "label": "Fit", "icon": "..." },
     "breakpoints": [ { "label": "Mobile Portrait", "minWidth": 320, "maxWidth": 477, "icon": "..." } ],
-    "help": { "label": "Help", "icon": "..." }
+    "help": { "label": "Help", "icon": "..." },
+    "reset": { "label": "Reset" }
+  },
+  "persistence": {
+    "enabled": true,
+    "storageKey": "rwd-window-state",
+    "keysToPersist": ["viewport", "mode", "activeBreakpoint", "currentDemo"]
   },
   "files": [
     { "id": 1, "label": "My Project", "value": "./path/to/index.html" }
@@ -47,6 +56,7 @@ The project uses a single `config.json` file at the root:
 ```
 
 > **Note:** The `initialViewport` config key is not used for startup size. The viewport always initialises to fit the actual available container space.
+> Set `persistence.enabled` to `false` to disable session restore entirely.
 
 ## Keyboard Shortcuts
 
@@ -60,6 +70,7 @@ Press `?` or click the help button to load the full reference page directly in t
 | `Tab` | Cycle breakpoints forward | `+Shift` = reverse |
 | `H` | Toggle min / max height clamp | — |
 | `F` | Fit to Container | — |
+| `R` | Reset to Defaults | Clears persistence and reloads |
 | `Esc` | Clear current mode | — |
 | `?` | Load splash reference page | 2nd press restores previous |
 
@@ -114,6 +125,7 @@ The application uses a lightweight EventBus for decoupled communication between 
 | `viewport:fit` | `UIManager`, `KeyboardManager`, `BreakpointManager` | `IFrameController` | Request fit-to-container |
 | `demo:changed` | `UIFactory` (select), `LocalLoader` | `LocalLoader` | User selected a demo |
 | `ui:helpClicked` | Help button (`UIFactory`) | `KeyboardManager` | User clicked the help button |
+| `ui:resetClicked` | Reset button (`UIFactory`), `KeyboardManager` (`R` key) | `App.js` | User triggered reset — clears storage and reloads |
 | `config:error` | `BreakpointManager`, `LocalLoader` | `App.js` | Configuration error (shown as toast) |
 | `input:stepChanged` | `UIManager` | `IFrameController` | ± button click or arrow key in input |
 | `input:stepCommit` | `UIManager` | `IFrameController` | Value committed on blur or Enter |
@@ -129,7 +141,7 @@ The application uses a lightweight EventBus for decoupled communication between 
 npm test
 ```
 
-102 tests across 9 suites using Vitest with happy-dom. All managers, core modules, and utilities are covered.
+116 tests across 9 suites using Vitest with happy-dom. All managers, core modules, and utilities are covered.
 
 ## Documentation
 

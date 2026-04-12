@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **LocalStorage persistence** — viewport size, mode, active breakpoint, and current demo are automatically saved and restored across sessions. Controlled by the new `persistence` section in `config.json` (`enabled`, `storageKey`, `keysToPersist`).
+- **`R` keyboard shortcut** — triggers Reset to Defaults from the keyboard; matches the Reset button behaviour.
 - **"Reset" button** in the masthead (alongside the Fit button) — clears all persisted state and reloads the app to factory defaults.
 - `AppState.saveToStorage()` — writes configured state keys to localStorage immediately.
 - `AppState.loadFromStorage()` — reads and validates persisted state on startup; invalid or missing keys fall back to defaults silently.
